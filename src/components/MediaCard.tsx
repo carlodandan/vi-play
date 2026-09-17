@@ -7,6 +7,7 @@ interface MediaCardProps {
   onClick: (item: MediaItem) => void;
   isWatchlisted: boolean;
   onToggleWatchlist: (id: number) => void;
+  rank?: number;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({
@@ -15,6 +16,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   onClick,
   isWatchlisted,
   onToggleWatchlist,
+  rank,
 }) => {
   const typeBadgeStyle =
     item.type === 'anime'
@@ -122,9 +124,12 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             >
               HD
             </span>
+          ) : (
+            <span className="text-zinc-600">HD</span>
           )}
         </div>
       </div>
     </div>
   );
 };
+
