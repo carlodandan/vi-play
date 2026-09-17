@@ -1,5 +1,5 @@
-import type { MediaItem } from '../types/media.ts';
-import { MediaCard } from './MediaCard.tsx';
+import type { MediaItem } from "../types/media.ts";
+import { MediaCard } from "./MediaCard.tsx";
 
 interface MediaGridProps {
   title: string;
@@ -8,7 +8,7 @@ interface MediaGridProps {
   onPlay: (item: MediaItem) => void;
   onSelectItem: (item: MediaItem) => void;
   watchlistIds: number[];
-  onToggleWatchlist: (id: number) => void;
+  onToggleWatchlist: (id: number, item?: MediaItem) => void;
   genres?: string[];
   selectedGenre?: string;
   onSelectGenre?: (genre: string) => void;
@@ -23,7 +23,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
   watchlistIds,
   onToggleWatchlist,
   genres = [],
-  selectedGenre = 'All',
+  selectedGenre = "All",
   onSelectGenre,
 }) => {
   return (
@@ -31,12 +31,20 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-1 h-6 rounded-full shrink-0" style={{ background: 'var(--color-accent)' }} />
+          <div
+            className="w-1 h-6 rounded-full shrink-0"
+            style={{ background: "var(--color-accent)" }}
+          />
           {icon && <div className="text-zinc-400">{icon}</div>}
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{title}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            {title}
+          </h2>
           <span
             className="text-xs font-semibold px-2 py-0.5 rounded-full text-zinc-500"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
           >
             {items.length}
           </span>
@@ -45,15 +53,23 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
         {/* Genre chips */}
         {genres.length > 0 && onSelectGenre && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {['All', ...genres].map((g) => (
+            {["All", ...genres].map((g) => (
               <button
                 key={g}
                 onClick={() => onSelectGenre(g)}
                 className="px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer"
                 style={
                   selectedGenre === g
-                    ? { background: 'var(--color-accent)', color: '#fff', boxShadow: '0 0 10px var(--color-accent-glow)' }
-                    : { background: 'rgba(255,255,255,0.05)', color: '#71717a', border: '1px solid rgba(255,255,255,0.07)' }
+                    ? {
+                        background: "var(--color-accent)",
+                        color: "#fff",
+                        boxShadow: "0 0 10px var(--color-accent-glow)",
+                      }
+                    : {
+                        background: "rgba(255,255,255,0.05)",
+                        color: "#71717a",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }
                 }
               >
                 {g}
@@ -66,10 +82,17 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
       {/* Grid */}
       {items.length === 0 ? (
         <div
+          role="status"
+          aria-live="polite"
           className="p-12 text-center rounded-2xl"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+          }}
         >
-          <p className="text-zinc-500 text-sm">No titles found in this category.</p>
+          <p className="text-zinc-500 text-sm">
+            No titles found in this category.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">

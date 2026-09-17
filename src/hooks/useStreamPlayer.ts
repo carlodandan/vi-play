@@ -1,7 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import Hls from 'hls.js';
-import type { StreamSource, StreamSubtitle, VylaStreamEvent } from '../types/media.ts';
-import { isMp4Stream, streamMediaSources } from '../services/vylaApi.ts';
+import { useEffect, useRef, useState } from "react";
+import Hls from "hls.js";
+import type {
+  StreamSource,
+  StreamSubtitle,
+  VylaStreamEvent,
+} from "../types/media.ts";
+import { isMp4Stream, streamMediaSources } from "../services/vylaApi.ts";
 
 export interface UseStreamPlayerProps {
   tmdbId: number | null;
@@ -34,7 +38,9 @@ export function useStreamPlayer({
   const [subtitles, setSubtitles] = useState<StreamSubtitle[]>([]);
   const [qualityLevels, setQualityLevels] = useState<StreamQualityLevel[]>([]);
   const [currentQuality, setCurrentQuality] = useState<number>(-1); // -1 = Auto
-  const [statusMessage, setStatusMessage] = useState<string>('Connecting to stream providers…');
+  const [statusMessage, setStatusMessage] = useState<string>(
+    "Connecting to stream providers…",
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDone, setIsDone] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,19 +94,24 @@ export function useStreamPlayer({
         setStatusMessage(`Playing via ${sourceToPlay.label} (HLS verified)`);
 
         if (data.levels && data.levels.length > 1) {
-          const levels: StreamQualityLevel[] = data.levels.map((lvl, index) => ({
-            index,
-            height: lvl.height,
-            bitrate: lvl.bitrate,
-            label: lvl.height ? `${lvl.height}p` : `Level ${index + 1}`,
-          }));
+          const levels: StreamQualityLevel[] = data.levels.map(
+            (lvl, index) => ({
+              index,
+              height: lvl.height,
+              bitrate: lvl.bitrate,
+              label: lvl.height ? `${lvl.height}p` : `Level ${index + 1}`,
+            }),
+          );
           setQualityLevels(levels);
         }
       });
 
       hls.on(Hls.Events.ERROR, (_, err) => {
         if (err.fatal) {
-          console.warn(`Source ${sourceToPlay.label} encountered fatal error:`, err);
+          console.warn(
+            `Source ${sourceToPlay.label} encountered fatal error:`,
+            err,
+          );
           destroyHls();
           tryFallbackSource(sourceToPlay.url);
         }
@@ -110,7 +121,7 @@ export function useStreamPlayer({
     }
 
     // Native HLS support (Safari iOS / macOS)
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = sourceToPlay.url;
       video.play().catch(() => {});
       setIsLoading(false);
@@ -126,14 +137,18 @@ export function useStreamPlayer({
 
   // Fallback to next working provider in queue
   const tryFallbackSource = (failedUrl: string) => {
-    fallbackQueueRef.current = fallbackQueueRef.current.filter((s) => s.url !== failedUrl);
+    fallbackQueueRef.current = fallbackQueueRef.current.filter(
+      (s) => s.url !== failedUrl,
+    );
     const next = fallbackQueueRef.current.shift();
     if (next) {
-      setStatusMessage(`Provider failed. Switching to fallback: ${next.label}…`);
+      setStatusMessage(
+        `Provider failed. Switching to fallback: ${next.label}…`,
+      );
       playSource(next);
     } else {
-      setStatusMessage('All resolved stream providers failed.');
-      setError('Playback failed on all available providers.');
+      setStatusMessage("All resolved stream providers failed.");
+      setError("Playback failed on all available providers.");
     }
   };
 
@@ -168,13 +183,13 @@ export function useStreamPlayer({
       episode,
       signal: controller.signal,
       onEvent: (event: VylaStreamEvent) => {
-        if (event.type === 'meta') {
+        if (event.type === "meta") {
           if (event.subtitles && event.subtitles.length > 0) {
             setSubtitles(event.subtitles);
           }
         }
 
-        if (event.type === 'source' && event.source) {
+        if (event.type === "source" && event.source) {
           const newSource = event.source;
           setSources((prev) => {
             if (prev.some((s) => s.url === newSource.url)) return prev;
@@ -190,21 +205,23 @@ export function useStreamPlayer({
           }
         }
 
-        if (event.type === 'done') {
+        if (event.type === "done") {
           setIsDone(true);
           if (!hasStartedPlaybackRef.current) {
             setIsLoading(false);
-            setStatusMessage('No working stream providers found for this title.');
+            setStatusMessage(
+              "No working stream providers found for this title.",
+            );
           }
         }
 
-        if (event.type === 'error' && event.error) {
+        if (event.type === "error" && event.error) {
           setError(event.error);
         }
       },
     }).catch((err) => {
-      if (err.name !== 'AbortError') {
-        setError(err.message || 'Stream connection failed');
+      if (err.name !== "AbortError") {
+        setError(err.message || "Stream connection failed");
         setIsLoading(false);
       }
     });

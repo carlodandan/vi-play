@@ -1,4 +1,4 @@
-export type MediaType = 'movie' | 'tv' | 'anime';
+export type MediaType = "movie" | "tv" | "anime";
 
 export interface Episode {
   episode_number: number;
@@ -47,7 +47,7 @@ export interface StreamSubtitle {
 }
 
 export interface VylaStreamEvent {
-  type: 'meta' | 'source' | 'done' | 'error';
+  type: "meta" | "source" | "done" | "error";
   source?: StreamSource;
   subtitles?: StreamSubtitle[];
   meta?: {
@@ -65,11 +65,10 @@ export interface VylaStreamEvent {
 
 export interface ProviderHealth {
   source: string;
-  status: 'ok' | 'degraded' | 'error';
+  status: "ok" | "degraded" | "error";
   latencyMs?: number;
   details?: string;
 }
-
 
 export interface WatchProgress {
   mediaId: number;

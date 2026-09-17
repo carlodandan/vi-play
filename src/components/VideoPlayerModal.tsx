@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import {
   X,
   Play,
@@ -16,10 +16,10 @@ import {
   Activity,
   AlertTriangle,
   RefreshCw,
-} from 'lucide-react';
-import type { MediaItem } from '../types/media.ts';
-import { useStreamPlayer } from '../hooks/useStreamPlayer.ts';
-import { isMp4Stream } from '../services/vylaApi.ts';
+} from "lucide-react";
+import type { MediaItem } from "../types/media.ts";
+import { useStreamPlayer } from "../hooks/useStreamPlayer.ts";
+import { isMp4Stream } from "../services/vylaApi.ts";
 
 interface VideoPlayerModalProps {
   item: MediaItem;
@@ -103,7 +103,10 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const seek = (seconds: number) => {
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + seconds));
+    video.currentTime = Math.max(
+      0,
+      Math.min(video.duration || 0, video.currentTime + seconds),
+    );
   };
 
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,14 +131,14 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
   // Format time (HH:MM:SS or MM:SS)
   const formatTime = (secs: number) => {
-    if (isNaN(secs)) return '00:00';
+    if (isNaN(secs)) return "00:00";
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
     const s = Math.floor(secs % 60);
     if (h > 0) {
-      return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+      return `${h}:${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
     }
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
   // Subtitle track selection
@@ -145,22 +148,29 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     if (!video) return;
 
     for (let i = 0; i < video.textTracks.length; i++) {
-      video.textTracks[i].mode = i === index ? 'showing' : 'disabled';
+      video.textTracks[i].mode = i === index ? "showing" : "disabled";
     }
     setShowSubtitlesMenu(false);
   };
 
   // Next / Previous episode calculation
-  const isSeries = item.type === 'tv' || item.type === 'anime';
+  const isSeries = item.type === "tv" || item.type === "anime";
   let hasPrevEpisode = false;
   let hasNextEpisode = false;
   let prevEpNumber = 0;
   let nextEpNumber = 0;
 
-  if (isSeries && season !== undefined && episode !== undefined && item.seasons) {
+  if (
+    isSeries &&
+    season !== undefined &&
+    episode !== undefined &&
+    item.seasons
+  ) {
     const currentSeason = item.seasons.find((s) => s.season_number === season);
     if (currentSeason?.episodes) {
-      const epIndex = currentSeason.episodes.findIndex((e) => e.episode_number === episode);
+      const epIndex = currentSeason.episodes.findIndex(
+        (e) => e.episode_number === episode,
+      );
       if (epIndex > 0) {
         hasPrevEpisode = true;
         prevEpNumber = currentSeason.episodes[epIndex - 1].episode_number;
@@ -175,10 +185,14 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   // Keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
 
       const video = videoRef.current;
-      if (e.code === 'Space') {
+      if (e.code === "Space") {
         e.preventDefault();
         if (video) {
           if (video.paused) {
@@ -189,13 +203,17 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             setIsPlaying(false);
           }
         }
-      } else if (e.code === 'ArrowLeft') {
+      } else if (e.code === "ArrowLeft") {
         e.preventDefault();
         if (video) video.currentTime = Math.max(0, video.currentTime - 10);
-      } else if (e.code === 'ArrowRight') {
+      } else if (e.code === "ArrowRight") {
         e.preventDefault();
-        if (video) video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
-      } else if (e.code === 'KeyF') {
+        if (video)
+          video.currentTime = Math.min(
+            video.duration || 0,
+            video.currentTime + 10,
+          );
+      } else if (e.code === "KeyF") {
         e.preventDefault();
         const container = containerRef.current;
         if (container) {
@@ -207,21 +225,21 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             setIsFullscreen(false);
           }
         }
-      } else if (e.code === 'KeyM') {
+      } else if (e.code === "KeyM") {
         e.preventDefault();
         if (video) {
           video.muted = !video.muted;
           setIsMuted(video.muted);
         }
-      } else if (e.code === 'Escape') {
+      } else if (e.code === "Escape") {
         if (!document.fullscreenElement) {
           onClose();
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, videoRef]);
 
   // Video time updates
@@ -234,16 +252,16 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
 
-    video.addEventListener('timeupdate', onTimeUpdate);
-    video.addEventListener('durationchange', onDurationChange);
-    video.addEventListener('play', onPlay);
-    video.addEventListener('pause', onPause);
+    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("durationchange", onDurationChange);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
 
     return () => {
-      video.removeEventListener('timeupdate', onTimeUpdate);
-      video.removeEventListener('durationchange', onDurationChange);
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('pause', onPause);
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("durationchange", onDurationChange);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
     };
   }, [videoRef]);
 
@@ -256,7 +274,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
       {/* Top Header Bar */}
       <div
         className={`absolute top-0 inset-x-0 z-40 p-4 sm:p-6 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          showControls ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -284,7 +302,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
           {activeSource && (
             <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-950/80 text-purple-300 border border-purple-800/60">
               <Activity className="w-3 h-3 text-purple-400" />
-              {activeSource.label} ({isMp4Stream(activeSource.url) ? 'MP4' : 'HLS'})
+              {activeSource.label} (
+              {isMp4Stream(activeSource.url) ? "MP4" : "HLS"})
             </span>
           )}
           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-900/80 text-zinc-400 border border-zinc-800">
@@ -336,7 +355,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             <AlertTriangle className="w-12 h-12 text-rose-500" />
             <h3 className="text-lg font-bold text-white">Stream Unavailable</h3>
             <p className="text-sm text-zinc-400 max-w-md">
-              {error}. Please check your Cloudflare Worker URL or self-hosted Vyla API status in Settings.
+              {error}. Please check your Cloudflare Worker URL or self-hosted
+              Vyla API status in Settings.
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -360,7 +380,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
       {/* Bottom Controls Overlay */}
       <div
         className={`absolute bottom-0 inset-x-0 z-40 p-4 sm:p-6 bg-gradient-to-t from-black/95 via-black/60 to-transparent transition-opacity duration-300 space-y-2.5 ${
-          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          showControls ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
         {/* Timeline Scrubber */}
@@ -389,9 +409,13 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             <button
               onClick={togglePlay}
               className="w-9 h-9 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-              title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
+              title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             >
-              {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+              {isPlaying ? (
+                <Pause className="w-4 h-4 fill-current" />
+              ) : (
+                <Play className="w-4 h-4 fill-current ml-0.5" />
+              )}
             </button>
 
             {hasPrevEpisode && onNavigateEpisode && season !== undefined && (
@@ -433,9 +457,13 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             <button
               onClick={toggleMute}
               className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer"
-              title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
+              title={isMuted ? "Unmute (M)" : "Mute (M)"}
             >
-              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 text-rose-400" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
             </button>
           </div>
 
@@ -451,22 +479,26 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                 }}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                   showSourcesMenu || sources.length > 0
-                    ? 'bg-zinc-900 border-zinc-700 text-purple-300'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                    ? "bg-zinc-900 border-zinc-700 text-purple-300"
+                    : "bg-zinc-900/60 border-zinc-800 text-zinc-400"
                 }`}
                 title="Switch Streaming Provider"
               >
                 <Activity className="w-3.5 h-3.5 text-purple-400" />
-                <span className="hidden sm:inline">Sources ({sources.length})</span>
+                <span className="hidden sm:inline">
+                  Sources ({sources.length})
+                </span>
               </button>
 
               {showSourcesMenu && (
                 <div className="absolute bottom-11 right-0 w-64 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl space-y-1 max-h-56 overflow-y-auto">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 px-2 py-1">
-                    Resolved Providers {isDone ? '(Complete)' : '(Resolving…)'}
+                    Resolved Providers {isDone ? "(Complete)" : "(Resolving…)"}
                   </div>
                   {sources.length === 0 ? (
-                    <div className="text-xs text-zinc-500 p-2">Waiting for providers…</div>
+                    <div className="text-xs text-zinc-500 p-2">
+                      Waiting for providers…
+                    </div>
                   ) : (
                     sources.map((src) => {
                       const isCur = activeSource?.url === src.url;
@@ -479,13 +511,13 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                           }}
                           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
                             isCur
-                              ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
-                              : 'text-zinc-300 hover:bg-zinc-900 hover:text-white'
+                              ? "bg-purple-600/20 text-purple-300 border border-purple-500/30"
+                              : "text-zinc-300 hover:bg-zinc-900 hover:text-white"
                           }`}
                         >
                           <span className="truncate">{src.label}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 ml-2">
-                            {isMp4Stream(src.url) ? 'MP4' : 'HLS'}
+                            {isMp4Stream(src.url) ? "MP4" : "HLS"}
                           </span>
                         </button>
                       );
@@ -510,8 +542,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   <Sliders className="w-3.5 h-3.5" />
                   <span>
                     {currentQuality === -1
-                      ? 'Auto'
-                      : qualityLevels[currentQuality]?.label || 'Quality'}
+                      ? "Auto"
+                      : qualityLevels[currentQuality]?.label || "Quality"}
                   </span>
                 </button>
 
@@ -524,8 +556,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                       }}
                       className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
                         currentQuality === -1
-                          ? 'bg-purple-600/20 text-purple-300'
-                          : 'text-zinc-300 hover:bg-zinc-900'
+                          ? "bg-purple-600/20 text-purple-300"
+                          : "text-zinc-300 hover:bg-zinc-900"
                       }`}
                     >
                       Auto
@@ -539,8 +571,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                         }}
                         className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
                           currentQuality === lvl.index
-                            ? 'bg-purple-600/20 text-purple-300'
-                            : 'text-zinc-300 hover:bg-zinc-900'
+                            ? "bg-purple-600/20 text-purple-300"
+                            : "text-zinc-300 hover:bg-zinc-900"
                         }`}
                       >
                         {lvl.label}
@@ -562,8 +594,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   }}
                   className={`p-2 rounded-lg border transition-all cursor-pointer ${
                     selectedSubIndex >= 0
-                      ? 'bg-purple-950/60 border-purple-600 text-purple-300'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                      ? "bg-purple-950/60 border-purple-600 text-purple-300"
+                      : "bg-zinc-900 border-zinc-800 text-zinc-300"
                   }`}
                   title="Subtitles"
                 >
@@ -576,8 +608,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                       onClick={() => selectSubtitle(-1)}
                       className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
                         selectedSubIndex === -1
-                          ? 'bg-purple-600/20 text-purple-300'
-                          : 'text-zinc-300 hover:bg-zinc-900'
+                          ? "bg-purple-600/20 text-purple-300"
+                          : "text-zinc-300 hover:bg-zinc-900"
                       }`}
                     >
                       Off
@@ -588,8 +620,8 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                         onClick={() => selectSubtitle(i)}
                         className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left truncate transition-colors cursor-pointer ${
                           selectedSubIndex === i
-                            ? 'bg-purple-600/20 text-purple-300'
-                            : 'text-zinc-300 hover:bg-zinc-900'
+                            ? "bg-purple-600/20 text-purple-300"
+                            : "text-zinc-300 hover:bg-zinc-900"
                         }`}
                       >
                         {sub.label}
@@ -606,7 +638,11 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
               className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer"
               title="Fullscreen (F)"
             >
-              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              {isFullscreen ? (
+                <Minimize className="w-4 h-4" />
+              ) : (
+                <Maximize className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import type { MediaItem } from '../types/media.ts';
+import type { MediaItem } from "../types/media.ts";
 
 export interface WatchHistoryItem {
   item: MediaItem;
@@ -8,11 +8,11 @@ export interface WatchHistoryItem {
   progressPercent: number; // e.g. 60
 }
 
-const STORAGE_KEY = 'vplay_watch_history';
-export const HISTORY_CHANGE_EVENT = 'vplay_history_updated';
+const STORAGE_KEY = "vplay_watch_history";
+export const HISTORY_CHANGE_EVENT = "vplay_history_updated";
 
 function notifyHistoryChanged() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(HISTORY_CHANGE_EVENT));
   }
 }
@@ -30,15 +30,13 @@ export function saveWatchHistory(
   item: MediaItem,
   season?: number,
   episode?: number,
-  progressPercent = 35
+  progressPercent = 35,
 ) {
   try {
     const history = getWatchHistory();
     const existingIndex = history.findIndex(
       (h) =>
-        h.item.id === item.id &&
-        h.season === season &&
-        h.episode === episode
+        h.item.id === item.id && h.season === season && h.episode === episode,
     );
 
     const entry: WatchHistoryItem = {
@@ -62,15 +60,15 @@ export function saveWatchHistory(
   }
 }
 
-export function clearWatchHistoryItem(id: number, season?: number, episode?: number) {
+export function clearWatchHistoryItem(
+  id: number,
+  season?: number,
+  episode?: number,
+) {
   try {
     const history = getWatchHistory().filter(
       (h) =>
-        !(
-          h.item.id === id &&
-          h.season === season &&
-          h.episode === episode
-        )
+        !(h.item.id === id && h.season === season && h.episode === episode),
     );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
     notifyHistoryChanged();
