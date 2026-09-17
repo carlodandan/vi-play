@@ -1,11 +1,13 @@
 import { CURATED_MEDIA } from '../data/curatedMedia.ts';
 import type { MediaItem, MediaType, WatchProgress } from '../types/media.ts';
+import { browseTmdb } from './vylaApi.ts';
 
 const WATCHLIST_KEY = 'vplay_watchlist';
 const HISTORY_KEY = 'vplay_history';
 
 /**
- * Returns all media items, optionally filtered by type, query, or genre
+ * Returns all media items, fetching live from TMDB via the worker.
+ * Falls back to CURATED_MEDIA if the worker is unreachable.
  */
 export async function getMediaList({
   category = 'all',
@@ -16,107 +18,98 @@ export async function getMediaList({
   query?: string;
   genre?: string;
 } = {}): Promise<MediaItem[]> {
-  const envTmdbKey = (import.meta as any).env?.VITE_TMDB_API_KEY;
-
-  // If TMDB API Key is configured via environment and user entered a query, search live TMDB!
-  if (query.trim() && envTmdbKey) {
-    try {
-      const liveResults = await searchTmdbLive(query.trim(), envTmdbKey);
-      if (liveResults.length > 0) {
-        return liveResults;
-      }
-    } catch (e) {
-      console.warn('Live TMDB search error, falling back to curated list:', e);
-    }
-  }
-
-  // Handle Watchlist
+  // ── Watchlist: always local ───────────────────────────────────────────────
   if (category === 'watchlist') {
     const savedIds = getWatchlistIds();
     return CURATED_MEDIA.filter((item) => savedIds.includes(item.id));
   }
 
-  let list = [...CURATED_MEDIA];
-
-  // Filter by category / media type
-  if (category !== 'all') {
-    list = list.filter((item) => item.type === category);
-  }
-
-  // Filter by genre
-  if (genre && genre !== 'All') {
-    list = list.filter((item) =>
-      item.genres.some((g) => g.toLowerCase().includes(genre.toLowerCase()))
-    );
-  }
-
-  // Filter by search query
+  // ── Search: ask worker /api/search, fall back to curated filter ──────────
   if (query.trim()) {
+    const live = await browseTmdb('search', { query: query.trim() });
+    if (live.length > 0) {
+      // Inject any curated matches that TMDB might have missed
+      const liveIds = new Set(live.map((i: any) => i.id));
+      const q = query.toLowerCase();
+      const curatedMatches = CURATED_MEDIA.filter(
+        (m) =>
+          !liveIds.has(m.id) &&
+          (m.title.toLowerCase().includes(q) ||
+            (m.original_title?.toLowerCase().includes(q)) ||
+            m.overview.toLowerCase().includes(q))
+      );
+      return [...live, ...curatedMatches] as MediaItem[];
+    }
+    // pure curated fallback
     const q = query.toLowerCase();
-    list = list.filter(
-      (item) =>
-        item.title.toLowerCase().includes(q) ||
-        (item.original_title && item.original_title.toLowerCase().includes(q)) ||
-        item.overview.toLowerCase().includes(q) ||
-        item.genres.some((g) => g.toLowerCase().includes(q))
+    return CURATED_MEDIA.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        (m.original_title?.toLowerCase().includes(q)) ||
+        m.overview.toLowerCase().includes(q) ||
+        m.genres.some((g) => g.toLowerCase().includes(q))
     );
   }
 
+  // ── Browsing by category: /api/popular?type=... ──────────────────────────
+  const typeParam = category === 'all' ? 'movie' : category; // 'all' returns movies by default; shelves query individually
+  const live = await browseTmdb('popular', { type: typeParam });
+
+  if (live.length > 0) {
+    // Merge curated items for this category at the front so watchlist / modal details still work
+    const liveIds = new Set(live.map((i: any) => i.id));
+    const curatedForType =
+      category === 'all'
+        ? []
+        : CURATED_MEDIA.filter((m) => m.type === category && !liveIds.has(m.id));
+
+    let merged = [...curatedForType, ...live] as MediaItem[];
+
+    // Genre filter
+    if (genre && genre !== 'All') {
+      const g = genre.toLowerCase();
+      merged = merged.filter((m) =>
+        m.genres.some((mg) => mg.toLowerCase().includes(g))
+      );
+    }
+
+    return merged;
+  }
+
+  // ── Pure curated fallback ─────────────────────────────────────────────────
+  let list = [...CURATED_MEDIA];
+  if (category !== 'all') list = list.filter((m) => m.type === category);
+  if (genre && genre !== 'All') {
+    list = list.filter((m) => m.genres.some((g) => g.toLowerCase().includes(genre.toLowerCase())));
+  }
   return list;
 }
 
 /**
- * Searches live TMDB API if user configured their TMDB API Key
+ * Fetch a full shelf of live items from the worker.
+ * Returns CURATED_MEDIA filtered by type as fallback.
  */
-async function searchTmdbLive(query: string, apiKey: string): Promise<MediaItem[]> {
-  const url = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(
-    query
-  )}&include_adult=false`;
+export async function fetchShelf(
+  type: 'trending' | 'popular',
+  mediaType: 'movie' | 'tv' | 'anime' | 'all',
+  limit = 20
+): Promise<MediaItem[]> {
+  const live = await browseTmdb(type, { type: mediaType });
+  if (live.length > 0) return live.slice(0, limit) as MediaItem[];
 
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const data = await res.json();
-  if (!Array.isArray(data?.results)) return [];
-
-  return data.results
-    .filter((r: any) => r.media_type === 'movie' || r.media_type === 'tv')
-    .map((r: any): MediaItem => {
-      const isMovie = r.media_type === 'movie';
-      const isAnime =
-        r.genre_ids?.includes(16) ||
-        (r.origin_country && r.origin_country.includes('JP')) ||
-        r.original_language === 'ja';
-
-      const type: MediaType = isAnime ? 'anime' : isMovie ? 'movie' : 'tv';
-
-      return {
-        id: r.id,
-        title: r.title || r.name || 'Untitled',
-        original_title: r.original_title || r.original_name,
-        type,
-        overview: r.overview || 'No synopsis available.',
-        poster_path: r.poster_path
-          ? `https://image.tmdb.org/t/p/w500${r.poster_path}`
-          : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop&q=80',
-        backdrop_path: r.backdrop_path
-          ? `https://image.tmdb.org/t/p/original${r.backdrop_path}`
-          : 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1280&auto=format&fit=crop&q=80',
-        vote_average: Number(r.vote_average?.toFixed(1)) || 7.0,
-        vote_count: r.vote_count || 0,
-        release_date: r.release_date || r.first_air_date || '2024',
-        genres: isAnime ? ['Anime', 'Animation'] : isMovie ? ['Movie'] : ['Series'],
-      };
-    });
+  // Curated fallback
+  if (mediaType === 'all') return CURATED_MEDIA.slice(0, limit);
+  return CURATED_MEDIA.filter((m) => m.type === mediaType).slice(0, limit);
 }
 
 /**
- * Find media by TMDB ID
+ * Find media by TMDB ID — check curated first, then live fetch from worker
  */
 export function getMediaById(id: number): MediaItem | undefined {
   return CURATED_MEDIA.find((m) => m.id === id);
 }
 
-// Watchlist Helpers
+// ── Watchlist helpers ─────────────────────────────────────────────────────────
 export function getWatchlistIds(): number[] {
   try {
     const raw = localStorage.getItem(WATCHLIST_KEY);
@@ -134,7 +127,6 @@ export function toggleWatchlist(id: number): boolean {
   const ids = getWatchlistIds();
   const index = ids.indexOf(id);
   let isAdded = false;
-
   if (index > -1) {
     ids.splice(index, 1);
     isAdded = false;
@@ -142,12 +134,11 @@ export function toggleWatchlist(id: number): boolean {
     ids.push(id);
     isAdded = true;
   }
-
   localStorage.setItem(WATCHLIST_KEY, JSON.stringify(ids));
   return isAdded;
 }
 
-// History & Progress Helpers
+// ── Watch history helpers ─────────────────────────────────────────────────────
 export function getWatchHistory(): WatchProgress[] {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -160,6 +151,5 @@ export function getWatchHistory(): WatchProgress[] {
 export function saveWatchProgress(progress: WatchProgress): void {
   const history = getWatchHistory().filter((p) => p.mediaId !== progress.mediaId);
   history.unshift(progress);
-  // Keep last 30 items
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 30)));
 }

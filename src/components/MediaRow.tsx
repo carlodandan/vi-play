@@ -54,28 +54,25 @@ export const MediaRow: React.FC<MediaRowProps> = ({
 
   const scroll = (direction: 'left' | 'right') => {
     if (!rowRef.current) return;
-    const containerWidth = rowRef.current.clientWidth;
-    const scrollAmount = direction === 'left' ? -containerWidth * 0.75 : containerWidth * 0.75;
-    rowRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const amount = direction === 'left' ? -rowRef.current.clientWidth * 0.75 : rowRef.current.clientWidth * 0.75;
+    rowRef.current.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
   if (items.length === 0) return null;
 
   return (
-    <section className="mb-10 group/row relative">
+    <section className="mb-10 animate-slideUp">
       {/* Row Header */}
       <div className="flex items-center justify-between gap-4 mb-4 px-1">
         <div className="flex items-baseline gap-3">
           <div className="flex items-center gap-2.5">
-            {icon && <div className="text-purple-400 shrink-0">{icon}</div>}
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-              {title}
-            </h2>
+            {/* Red left-accent bar */}
+            <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: 'var(--color-accent)' }} />
+            {icon && <div className="text-zinc-400 shrink-0">{icon}</div>}
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">{title}</h2>
           </div>
           {subtitle && (
-            <span className="hidden sm:inline-block text-xs font-medium text-zinc-400">
-              {subtitle}
-            </span>
+            <span className="hidden sm:inline-block text-xs font-medium text-zinc-500">{subtitle}</span>
           )}
         </div>
 
@@ -83,23 +80,30 @@ export const MediaRow: React.FC<MediaRowProps> = ({
           {onSeeAll && (
             <button
               onClick={onSeeAll}
-              className="flex items-center gap-1.5 text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors group/btn cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-semibold transition-colors group/btn cursor-pointer"
+              style={{ color: 'var(--color-accent)' }}
             >
-              <span>Explore All</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+              <span>See All</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" aria-hidden="true" />
             </button>
           )}
 
-          {/* Desktop Arrow Controls */}
+          {/* Desktop scroll arrows */}
           <div className="hidden md:flex items-center gap-1">
             <button
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
               className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all cursor-pointer ${
-                canScrollLeft
-                  ? 'bg-zinc-900/80 hover:bg-zinc-800 text-white border-zinc-700/60 shadow-md'
-                  : 'bg-zinc-900/30 text-zinc-600 border-zinc-800/40 cursor-not-allowed opacity-50'
+                canScrollLeft ? 'text-white hover:scale-105' : 'text-zinc-700 cursor-not-allowed opacity-40'
               }`}
+              style={canScrollLeft ? {
+                background: 'rgba(15,15,35,0.85)',
+                backdropFilter: 'blur(8px)',
+                borderColor: 'rgba(255,255,255,0.08)',
+              } : {
+                background: 'rgba(10,10,15,0.5)',
+                borderColor: 'rgba(255,255,255,0.04)',
+              }}
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -108,10 +112,16 @@ export const MediaRow: React.FC<MediaRowProps> = ({
               onClick={() => scroll('right')}
               disabled={!canScrollRight}
               className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all cursor-pointer ${
-                canScrollRight
-                  ? 'bg-zinc-900/80 hover:bg-zinc-800 text-white border-zinc-700/60 shadow-md'
-                  : 'bg-zinc-900/30 text-zinc-600 border-zinc-800/40 cursor-not-allowed opacity-50'
+                canScrollRight ? 'text-white hover:scale-105' : 'text-zinc-700 cursor-not-allowed opacity-40'
               }`}
+              style={canScrollRight ? {
+                background: 'var(--color-accent)',
+                borderColor: 'transparent',
+                boxShadow: '0 0 10px var(--color-accent-glow)',
+              } : {
+                background: 'rgba(10,10,15,0.5)',
+                borderColor: 'rgba(255,255,255,0.04)',
+              }}
               aria-label="Scroll right"
             >
               <ChevronRight className="w-4 h-4" />
@@ -120,41 +130,50 @@ export const MediaRow: React.FC<MediaRowProps> = ({
         </div>
       </div>
 
-      {/* Horizontal Scrolling Track */}
+      {/* Scrolling track */}
       <div
         ref={rowRef}
-        className="flex items-stretch gap-4 sm:gap-5 overflow-x-auto pb-4 pt-1 px-1 scrollbar-none snap-x snap-mandatory"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto pb-4 pt-1 px-1 scrollbar-none snap-x snap-mandatory"
       >
         {items.map((item, index) => (
           <div
             key={`${item.type}-${item.id}`}
-            className={`shrink-0 snap-start transition-transform ${
+            className={`shrink-0 snap-start ${
               showRank
-                ? 'w-[180px] sm:w-[220px] md:w-[240px]'
-                : 'w-[150px] sm:w-[180px] md:w-[200px]'
+                ? 'w-[170px] sm:w-[200px] md:w-[220px]'
+                : 'w-[148px] sm:w-[175px] md:w-[195px]'
             }`}
           >
             {showRank ? (
-              <div className="relative flex items-end">
-                {/* Stylized Rank Number */}
+              /* Rank layout: card + giant number in BOTTOM-RIGHT corner */
+              <div className="relative">
+                <MediaCard
+                  item={item}
+                  onPlay={onPlay}
+                  onClick={onSelectItem}
+                  isWatchlisted={watchlistIds.includes(item.id)}
+                  onToggleWatchlist={onToggleWatchlist}
+                />
+                {/* Giant rank number — BOTTOM-RIGHT, clipped within card */}
                 <span
-                  className="font-black text-6xl sm:text-7xl md:text-8xl leading-none select-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-t from-zinc-800 via-zinc-700 to-zinc-900 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] pr-1 -mr-4 sm:-mr-5 z-0"
+                  className="absolute bottom-[3.2rem] right-[-6px] font-display leading-none select-none pointer-events-none z-10"
                   style={{
-                    WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
+                    fontSize: 'clamp(72px, 14vw, 110px)',
+                    // Deep stroke only, gradient fill from dark to slightly lighter
+                    color: 'transparent',
+                    WebkitTextStroke: index < 3
+                      ? `2px rgba(225,29,72,0.45)`    // Top 3 get a hint of red stroke
+                      : '1.5px rgba(255,255,255,0.12)',
+                    backgroundImage: index < 3
+                      ? 'linear-gradient(160deg, rgba(225,29,72,0.30) 0%, rgba(30,27,75,0.25) 60%, rgba(0,0,0,0.10) 100%)'
+                      : 'linear-gradient(160deg, rgba(80,80,100,0.28) 0%, rgba(20,20,40,0.18) 60%, rgba(0,0,0,0.10) 100%)',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.9))',
                   }}
                 >
                   {index + 1}
                 </span>
-                <div className="flex-1 z-10">
-                  <MediaCard
-                    item={item}
-                    onPlay={onPlay}
-                    onClick={onSelectItem}
-                    isWatchlisted={watchlistIds.includes(item.id)}
-                    onToggleWatchlist={onToggleWatchlist}
-                  />
-                </div>
               </div>
             ) : (
               <MediaCard

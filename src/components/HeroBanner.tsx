@@ -33,7 +33,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     setCurrentIndex((prev) => (prev - 1 + heroList.length) % heroList.length);
   }, [heroList.length]);
 
-  // Auto advance every 7 seconds when not hovered
   useEffect(() => {
     if (isPaused || heroList.length <= 1) return;
     const interval = setInterval(handleNext, 7000);
@@ -44,136 +43,176 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
   const isWatchlisted = watchlistIds.includes(currentItem.id);
   const typeLabel =
-    currentItem.type === 'anime'
-      ? 'Anime Series'
-      : currentItem.type === 'tv'
-      ? 'TV Series'
-      : 'Movie';
+    currentItem.type === 'anime' ? 'Anime Series'
+    : currentItem.type === 'tv' ? 'TV Series'
+    : 'Movie';
 
   return (
     <div
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="group relative w-full h-[540px] sm:h-[600px] md:h-[640px] overflow-hidden rounded-2xl mb-12 border border-zinc-800/80 shadow-2xl bg-zinc-950"
+      // Full-bleed: break out of max-w-7xl container with negative margins
+      className="group relative w-full overflow-hidden mb-10"
+      style={{
+        height: 'clamp(480px, 62vw, 720px)',
+        // Edge-to-edge with negative side margins to bust out of the padded container
+        marginLeft: 'calc(-1 * (max(0px, (100vw - 80rem) / 2) + 1rem))',
+        marginRight: 'calc(-1 * (max(0px, (100vw - 80rem) / 2) + 1rem))',
+        width: '100vw',
+        maxWidth: '100vw',
+      }}
     >
-      {/* Background Slides with Crossfade */}
+      {/* Background slide images with crossfade */}
       {heroList.map((item, index) => {
         const isActive = index === currentIndex;
         return (
           <div
             key={`${item.type}-${item.id}`}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              isActive ? 'opacity-100 z-0 pointer-events-auto' : 'opacity-0 z-[-1] pointer-events-none'
+              isActive ? 'opacity-100 z-0' : 'opacity-0 z-[-1]'
             }`}
           >
-            {/* LCP candidate gets fetchpriority="high", background slides get fetchpriority="low" and loading="lazy" */}
             <img
               src={item.backdrop_path || item.poster_path}
               alt={item.title}
               fetchPriority={index === 0 ? 'high' : 'low'}
               loading={index === 0 ? 'eager' : 'lazy'}
-              className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-7000 ease-out"
+              className="w-full h-full object-cover object-center"
+              style={{ transform: 'scale(1.04)' }}
             />
           </div>
         );
       })}
 
-      {/* Cinematic Vignettes & Gradient Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#090a0f] via-[#090a0f]/85 md:via-[#090a0f]/75 to-transparent w-full lg:w-4/5 pointer-events-none z-10" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#090a0f] via-[#090a0f]/40 to-transparent pointer-events-none z-10" />
-      <div className="absolute inset-0 bg-radial-[circle_at_20%_50%] from-transparent via-[#090a0f]/20 to-[#090a0f]/60 pointer-events-none z-10" />
+      {/* Cinematic multi-layer vignette */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+        {/* Left side content shadow */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.10) 70%, transparent 100%)' }} />
+        {/* Bottom vignette — bleed into shelf area */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #000000 0%, rgba(0,0,0,0.70) 20%, rgba(0,0,0,0.20) 50%, transparent 80%)' }} />
+        {/* Top shadow for navbar readability */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, transparent 25%)' }} />
+      </div>
 
-      {/* Hero Content */}
-      <div className="relative z-20 h-full max-w-3xl flex flex-col justify-end p-6 sm:p-10 md:p-16 space-y-4">
-        {/* Badges */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30">
-            <Sparkles className="w-3.5 h-3.5" />
-            {typeLabel}
-          </span>
-          <span className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-zinc-900/90 text-amber-400 border border-zinc-700/60 backdrop-blur-md">
-            <Star className="w-3.5 h-3.5 fill-amber-400" />
-            {currentItem.vote_average.toFixed(1)}
-          </span>
-          <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-zinc-900/80 text-zinc-300 border border-zinc-800">
-            {currentItem.release_date?.slice(0, 4)}
-          </span>
-          <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-zinc-900/80 text-purple-300 border border-purple-500/40">
-            4K Ultra HD
-          </span>
-          {currentItem.genres.slice(0, 3).map((genre) => (
+      {/* Hero content: positioned with padding mirroring container insets */}
+      <div
+        className="relative z-20 h-full flex flex-col justify-end"
+        style={{
+          paddingLeft: 'max(1rem, calc((100vw - 80rem) / 2 + 1.5rem))',
+          paddingRight: 'max(1rem, calc((100vw - 80rem) / 2 + 1.5rem))',
+          paddingBottom: '4rem',
+        }}
+      >
+        <div className="max-w-2xl space-y-4">
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-2">
             <span
-              key={genre}
-              className="px-2.5 py-0.5 text-xs rounded-md bg-zinc-900/60 text-zinc-400 border border-zinc-800/80"
+              className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-md text-white shadow-lg"
+              style={{ background: 'var(--color-accent)', boxShadow: '0 0 12px var(--color-accent-glow)' }}
             >
-              {genre}
+              <Sparkles className="w-3 h-3" aria-hidden="true" />
+              {typeLabel}
             </span>
-          ))}
-        </div>
+            <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md text-amber-400 border border-white/10" style={{ background: 'rgba(0,0,0,0.60)', backdropFilter: 'blur(8px)' }}>
+              <Star className="w-3 h-3 fill-amber-400" aria-hidden="true" />
+              {currentItem.vote_average.toFixed(1)}
+            </span>
+            <span className="px-2.5 py-1 text-[11px] font-medium rounded-md text-zinc-300 border border-white/10" style={{ background: 'rgba(0,0,0,0.60)', backdropFilter: 'blur(8px)' }}>
+              {currentItem.release_date?.slice(0, 4)}
+            </span>
+            {currentItem.genres.slice(0, 2).map((genre) => (
+              <span
+                key={genre}
+                className="px-2.5 py-0.5 text-[11px] rounded-md text-zinc-400 border border-white/[0.06]"
+                style={{ background: 'rgba(0,0,0,0.50)' }}
+              >
+                {genre}
+              </span>
+            ))}
+          </div>
 
-        {/* Title */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
-          {currentItem.title}
-        </h1>
+          {/* Title — Bebas Neue large cinematic */}
+          <h1
+            className="font-display text-5xl sm:text-6xl md:text-7xl leading-none tracking-wide text-white drop-shadow-2xl"
+            style={{ textShadow: '0 4px 24px rgba(0,0,0,0.8)' }}
+          >
+            {currentItem.title}
+          </h1>
 
-        {/* Tagline / Subtitle */}
-        {currentItem.tagline && (
-          <p className="text-sm sm:text-base font-semibold text-purple-300/90 italic drop-shadow">
-            "{currentItem.tagline}"
+          {/* Tagline */}
+          {currentItem.tagline && (
+            <p className="text-sm sm:text-base font-medium italic" style={{ color: '#fda4af' }}>
+              "{currentItem.tagline}"
+            </p>
+          )}
+
+          {/* Overview */}
+          <p className="text-sm sm:text-base text-zinc-300/90 line-clamp-2 leading-relaxed max-w-xl">
+            {currentItem.overview}
           </p>
-        )}
 
-        {/* Overview */}
-        <p className="text-sm sm:text-base text-zinc-300/90 line-clamp-3 leading-relaxed max-w-2xl drop-shadow">
-          {currentItem.overview}
-        </p>
+          {/* CTAs */}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {/* Primary: red glow play button */}
+            <button
+              onClick={() => onPlay(currentItem)}
+              className="flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-white font-bold transition-all cursor-pointer glow-pulse hover:scale-[1.03] active:scale-[0.97]"
+              style={{
+                background: 'var(--color-accent)',
+                boxShadow: '0 0 20px var(--color-accent-glow)',
+              }}
+            >
+              <Play className="w-5 h-5 fill-current" aria-hidden="true" />
+              Watch Now
+            </button>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-wrap items-center gap-3.5 pt-2">
-          <button
-            onClick={() => onPlay(currentItem)}
-            className="flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-xl shadow-purple-600/40 hover:shadow-purple-600/60 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            <Play className="w-5 h-5 fill-current" />
-            Watch Now
-          </button>
+            {/* Watchlist button */}
+            <button
+              onClick={() => onToggleWatchlist(currentItem.id)}
+              className="flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold border transition-all cursor-pointer"
+              style={{
+                background: isWatchlisted ? 'rgba(225,29,72,0.15)' : 'rgba(15,15,35,0.75)',
+                backdropFilter: 'blur(8px)',
+                borderColor: isWatchlisted ? 'var(--color-accent)' : 'rgba(255,255,255,0.10)',
+                color: isWatchlisted ? '#fda4af' : '#e4e4e7',
+              }}
+            >
+              {isWatchlisted ? <Check className="w-4 h-4" aria-hidden="true" /> : <Bookmark className="w-4 h-4" aria-hidden="true" />}
+              {isWatchlisted ? 'Saved' : 'Watchlist'}
+            </button>
 
-          <button
-            onClick={() => onToggleWatchlist(currentItem.id)}
-            className={`flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold border backdrop-blur-md transition-all cursor-pointer ${
-              isWatchlisted
-                ? 'bg-purple-950/70 border-purple-500/60 text-purple-300'
-                : 'bg-zinc-900/80 hover:bg-zinc-800/90 border-zinc-700/60 text-zinc-200'
-            }`}
-          >
-            {isWatchlisted ? <Check className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-            {isWatchlisted ? 'In Watchlist' : 'Watchlist'}
-          </button>
-
-          <button
-            onClick={() => onOpenDetails(currentItem)}
-            className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-700/60 text-zinc-300 font-semibold backdrop-blur-md transition-all cursor-pointer"
-          >
-            <Info className="w-4 h-4" />
-            Details
-          </button>
+            {/* Details button */}
+            <button
+              onClick={() => onOpenDetails(currentItem)}
+              className="flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold border transition-all cursor-pointer text-zinc-300 hover:text-white"
+              style={{
+                background: 'rgba(15,15,35,0.75)',
+                backdropFilter: 'blur(8px)',
+                borderColor: 'rgba(255,255,255,0.10)',
+              }}
+            >
+              <Info className="w-4 h-4" aria-hidden="true" />
+              Details
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Desktop Previous / Next Controls */}
+      {/* Navigation controls — bottom right */}
       {heroList.length > 1 && (
         <div className="absolute bottom-6 right-6 z-20 flex items-center gap-3">
-          {/* Slide Dots / Indicators */}
-          <div className="flex items-center gap-2 mr-2">
+          {/* Dots */}
+          <div className="flex items-center gap-1.5">
             {heroList.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentIndex(i)}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  i === currentIndex
-                    ? 'w-7 bg-purple-500 shadow-sm shadow-purple-500/50'
-                    : 'w-2 bg-zinc-700 hover:bg-zinc-500'
-                }`}
+                className="h-1.5 rounded-full transition-all cursor-pointer"
+                style={{
+                  width: i === currentIndex ? '28px' : '6px',
+                  background: i === currentIndex ? 'var(--color-accent)' : 'rgba(255,255,255,0.25)',
+                  boxShadow: i === currentIndex ? '0 0 8px var(--color-accent-glow)' : 'none',
+                }}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}
@@ -181,18 +220,43 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
           <button
             onClick={handlePrev}
-            className="w-10 h-10 rounded-full bg-zinc-950/70 hover:bg-purple-600 text-white border border-zinc-700/60 hover:border-purple-500 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md"
+            className="w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer text-white"
+            style={{
+              background: 'rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(8px)',
+              borderColor: 'rgba(255,255,255,0.10)',
+            }}
             aria-label="Previous slide"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={handleNext}
-            className="w-10 h-10 rounded-full bg-zinc-950/70 hover:bg-purple-600 text-white border border-zinc-700/60 hover:border-purple-500 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md"
+            className="w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer text-white"
+            style={{
+              background: 'var(--color-accent)',
+              boxShadow: '0 0 12px var(--color-accent-glow)',
+              borderColor: 'transparent',
+            }}
             aria-label="Next slide"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
+        </div>
+      )}
+
+      {/* Progress bar for auto-advance (thin line at bottom) */}
+      {heroList.length > 1 && !isPaused && (
+        <div className="absolute bottom-0 left-0 right-0 h-px z-20" style={{ background: 'rgba(255,255,255,0.08)' }}>
+          <div
+            key={currentIndex}
+            className="h-full"
+            style={{
+              background: 'var(--color-accent)',
+              animation: 'width-progress 7s linear',
+              animationFillMode: 'forwards',
+            }}
+          />
         </div>
       )}
     </div>

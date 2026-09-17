@@ -231,3 +231,30 @@ export async function fetchExtraSubtitles(
     return [];
   }
 }
+
+// ─── TMDB Discovery via Worker ────────────────────────────────────────────────
+
+export type BrowseEndpoint = 'trending' | 'popular' | 'search';
+
+/**
+ * Browse TMDB content through the worker — no client-side API key needed.
+ * Falls back to an empty array if the worker is unreachable.
+ */
+export async function browseTmdb(
+  endpoint: BrowseEndpoint,
+  params: Record<string, string> = {}
+): Promise<any[]> {
+  const base = API_BASE_URL;
+  const qs = new URLSearchParams(params).toString();
+  const url = `${base}/api/${endpoint}${qs ? `?${qs}` : ''}`;
+
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.results) ? data.results : [];
+  } catch {
+    return [];
+  }
+}
+

@@ -256,7 +256,7 @@ export default {
             sdk.getSubtitles(id, season, episode).catch(() => []),
           ]);
 
-          const tmdbData = tmdbRes && tmdbRes.ok ? await tmdbRes.json() : null;
+          const tmdbData: any = tmdbRes && tmdbRes.ok ? await tmdbRes.json() : null;
 
           // B. Emit 'meta' event immediately
           await sendEvent({
@@ -363,7 +363,144 @@ export default {
       });
     }
 
+    // 8. TMDB Discovery — /api/trending?type=all|movie|tv|anime&page=1
+    if (url.pathname === '/api/trending') {
+      const type = url.searchParams.get('type') || 'all';
+      const page = url.searchParams.get('page') || '1';
+      const tmdbType = type === 'movie' ? 'movie' : type === 'tv' || type === 'anime' ? 'tv' : 'all';
+      const endpoint = `https://api.themoviedb.org/3/trending/${tmdbType}/week?api_key=${tmdbKey}&page=${page}`;
+      try {
+        const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        const data: any = await res.json();
+        const items = mapTmdbResults(data.results || [], type as any);
+        return addCorsHeaders(Response.json({ results: items, page: data.page, total_pages: data.total_pages }));
+      } catch (err: unknown) {
+        return addCorsHeaders(Response.json({ error: String(err), results: [] }, { status: 502 }));
+      }
+    }
+
+    // 9. TMDB Popular — /api/popular?type=movie|tv|anime&page=1
+    if (url.pathname === '/api/popular') {
+      const type = url.searchParams.get('type') || 'movie';
+      const page = url.searchParams.get('page') || '1';
+      let endpoint: string;
+      if (type === 'anime') {
+        endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
+      } else if (type === 'tv') {
+        endpoint = `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbKey}&page=${page}`;
+      } else {
+        endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbKey}&page=${page}`;
+      }
+      try {
+        const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        const data: any = await res.json();
+        const items = mapTmdbResults(data.results || [], type as any);
+        return addCorsHeaders(Response.json({ results: items, page: data.page, total_pages: data.total_pages }));
+      } catch (err: unknown) {
+        return addCorsHeaders(Response.json({ error: String(err), results: [] }, { status: 502 }));
+      }
+    }
+
+    // 10. TMDB Search — /api/search?query=...&page=1
+    if (url.pathname === '/api/search') {
+      const query = url.searchParams.get('query') || '';
+      const page = url.searchParams.get('page') || '1';
+      if (!query.trim()) return addCorsHeaders(Response.json({ results: [] }));
+      const endpoint = `https://api.themoviedb.org/3/search/multi?api_key=${tmdbKey}&query=${encodeURIComponent(query)}&include_adult=false&page=${page}`;
+      try {
+        const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        const data: any = await res.json();
+        const items = mapTmdbResults((data.results || []).filter((r: any) => r.media_type === 'movie' || r.media_type === 'tv'), 'all');
+        return addCorsHeaders(Response.json({ results: items, page: data.page, total_pages: data.total_pages }));
+      } catch (err: unknown) {
+        return addCorsHeaders(Response.json({ error: String(err), results: [] }, { status: 502 }));
+      }
+    }
+
+    // 11. TMDB Details — /api/details?type=movie|tv&id=...
+    if (url.pathname === '/api/details') {
+      const type = url.searchParams.get('type') || 'movie';
+      const id = url.searchParams.get('id') || '';
+      if (!id) return addCorsHeaders(Response.json({ error: 'Missing id' }, { status: 400 }));
+      const endpoint = type === 'tv'
+        ? `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbKey}&append_to_response=seasons`
+        : `https://api.themoviedb.org/3/movie/${id}?api_key=${tmdbKey}`;
+      try {
+        const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        const data: any = await res.json();
+        const items = mapTmdbResults([{ ...data, media_type: type }], type as any);
+        return addCorsHeaders(Response.json({ result: items[0] || null }));
+      } catch (err: unknown) {
+        return addCorsHeaders(Response.json({ error: String(err), result: null }, { status: 502 }));
+      }
+    }
+
     // Default 404
     return addCorsHeaders(Response.json({ error: 'Endpoint not found' }, { status: 404 }));
   },
 };
+
+// ─── TMDB → MediaItem mapper ─────────────────────────────────────────────────
+type BrowseType = 'all' | 'movie' | 'tv' | 'anime';
+
+function mapTmdbResults(results: any[], hint: BrowseType) {
+  return results
+    .filter((r: any) => r.poster_path) // skip items with no image
+    .map((r: any) => {
+      const mediaType: string = r.media_type || (r.first_air_date !== undefined ? 'tv' : 'movie');
+      const isMovie = mediaType === 'movie';
+      const isAnime =
+        hint === 'anime' ||
+        (r.genre_ids?.includes(16) && (r.origin_country?.includes('JP') || r.original_language === 'ja')) ||
+        (r.genres?.some((g: any) => g.id === 16) && r.original_language === 'ja');
+
+      const type = isAnime ? 'anime' : isMovie ? 'movie' : 'tv';
+
+      // Genre list — prefer full genre objects if present (from /details), else map IDs
+      const genreNames: string[] = r.genres
+        ? r.genres.map((g: any) => g.name)
+        : mapGenreIds(r.genre_ids || [], isMovie);
+
+      if (isAnime && !genreNames.includes('Anime')) genreNames.unshift('Anime');
+
+      return {
+        id: r.id,
+        title: r.title || r.name || 'Untitled',
+        original_title: r.original_title || r.original_name || undefined,
+        type,
+        overview: r.overview || 'No synopsis available.',
+        poster_path: `https://image.tmdb.org/t/p/w500${r.poster_path}`,
+        backdrop_path: r.backdrop_path
+          ? `https://image.tmdb.org/t/p/original${r.backdrop_path}`
+          : `https://image.tmdb.org/t/p/w500${r.poster_path}`,
+        vote_average: Math.round((r.vote_average || 0) * 10) / 10,
+        vote_count: r.vote_count || 0,
+        release_date: r.release_date || r.first_air_date || '',
+        genres: genreNames,
+        tagline: r.tagline || undefined,
+        featured: (r.vote_average || 0) >= 7.5 && !!r.backdrop_path,
+        seasons_count: r.number_of_seasons || undefined,
+      };
+    });
+}
+
+const MOVIE_GENRES: Record<number, string> = {
+  28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+  18: 'Drama', 10751: 'Family', 14: 'Fantasy', 27: 'Horror', 9648: 'Mystery',
+  10749: 'Romance', 878: 'Sci-Fi', 53: 'Thriller', 10752: 'War', 37: 'Western',
+};
+const TV_GENRES: Record<number, string> = {
+  16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama',
+  10751: 'Family', 10759: 'Action & Adventure', 10762: 'Kids', 9648: 'Mystery',
+  10763: 'News', 10764: 'Reality', 10765: 'Sci-Fi & Fantasy', 10766: 'Soap',
+  10767: 'Talk', 10768: 'War & Politics', 37: 'Western',
+};
+
+function mapGenreIds(ids: number[], isMovie: boolean): string[] {
+  const map = isMovie ? MOVIE_GENRES : TV_GENRES;
+  return ids.map((id) => map[id]).filter(Boolean);
+}

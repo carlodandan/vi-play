@@ -9,20 +9,27 @@ export const DisclaimerBanner: React.FC = () => {
   return (
     <aside
       aria-label="Disclaimer"
-      className="bg-purple-950/70 border-b border-purple-800/40 text-purple-200 text-xs px-4 py-2 flex items-center justify-between gap-3 sticky top-0 z-50 backdrop-blur-md"
+      className="sticky top-0 z-50 flex items-center justify-between gap-3 px-4 py-2 text-xs border-b"
+      style={{
+        background: 'rgba(225,29,72,0.08)',
+        backdropFilter: 'blur(12px)',
+        borderColor: 'rgba(225,29,72,0.18)',
+        color: '#fda4af',
+      }}
     >
-      <div className="flex items-center gap-2 max-w-5xl mx-auto text-center md:text-left">
-        <AlertCircle className="w-4 h-4 text-purple-400 shrink-0 hidden sm:inline" />
+      <div className="flex items-center gap-2 max-w-5xl mx-auto">
+        <AlertCircle className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
         <span>
-          <strong className="text-purple-300 font-semibold uppercase tracking-wider text-[11px] mr-1.5">
-            Notice:
+          <strong className="font-semibold tracking-wider text-[11px] mr-1.5" style={{ color: '#fb7185' }}>
+            NOTICE:
           </strong>
-          VPlay is an experimental media interface intended for entertainment and educational purposes only. VPlay does not host, upload, or store any media files.
+          VPlay is an experimental media interface for entertainment & educational purposes only. VPlay does not host or store any media files.
         </span>
       </div>
       <button
         onClick={() => setDismissed(true)}
-        className="text-purple-400 hover:text-white transition-colors p-1 rounded hover:bg-purple-900/50"
+        className="shrink-0 p-1 rounded transition-colors cursor-pointer hover:bg-rose-900/40"
+        style={{ color: '#fb7185' }}
         title="Dismiss notice"
         aria-label="Dismiss notice"
       >
