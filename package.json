@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"worker/**/*.{ts,tsx,css}\" \"index.html\"",
+    "format:fix": "prettier --write \"src/**/*.{ts,tsx,css}\" \"worker/**/*.{ts,tsx,css}\" \"index.html\"",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -27,6 +29,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "oxlint": "^1.81.0",
+    "prettier": "^3.9.7",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
