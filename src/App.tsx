@@ -5,7 +5,6 @@ import { HeroBanner } from './components/HeroBanner.tsx';
 import { MediaGrid } from './components/MediaGrid.tsx';
 import { MediaModal } from './components/MediaModal.tsx';
 import { VideoPlayerModal } from './components/VideoPlayerModal.tsx';
-import { SettingsModal } from './components/SettingsModal.tsx';
 import { Footer } from './components/Footer.tsx';
 import type { MediaItem } from './types/media.ts';
 import { CURATED_MEDIA } from './data/curatedMedia.ts';
@@ -30,7 +29,6 @@ export function App() {
   const [watchlistIds, setWatchlistIds] = useState<number[]>(getWatchlistIds);
   const [detailModalItem, setDetailModalItem] = useState<MediaItem | null>(null);
   const [activePlayer, setActivePlayer] = useState<ActivePlayerState | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Load media list based on current filters
   useEffect(() => {
@@ -120,7 +118,6 @@ export function App() {
         }}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onOpenSettings={() => setIsSettingsOpen(true)}
         watchlistCount={watchlistIds.length}
       />
 
@@ -271,20 +268,6 @@ export function App() {
           onNavigateEpisode={handleNavigateEpisode}
         />
       )}
-
-      {/* Settings Modal (Cloudflare Worker & API Config) */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSettingsSaved={() => {
-          // Re-load list if settings changed
-          getMediaList({
-            category: currentCategory,
-            query: searchQuery,
-            genre: selectedGenre,
-          }).then(setMediaList);
-        }}
-      />
 
       {/* Footer */}
       <Footer />

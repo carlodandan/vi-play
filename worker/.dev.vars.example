@@ -1,0 +1,3 @@
+# Local development secrets for Wrangler (worker/.dev.vars)
+# Copy this file to .dev.vars in the worker/ directory for local wrangler dev
+VYLA_API_KEY=your_standard_or_partner_api_key

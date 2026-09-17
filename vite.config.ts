@@ -10,4 +10,22 @@ export default defineConfig({
     tailwindcss(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  server: {
+    port: 5173,
+    proxy: {
+      // Local dev proxy forwarding to local wrangler worker dev running on http://127.0.0.1:8787
+      '/api': {
+        target: 'http://127.0.0.1:8787',
+        changeOrigin: true,
+      },
+      '/movie': {
+        target: 'http://127.0.0.1:8787',
+        changeOrigin: true,
+      },
+      '/tv': {
+        target: 'http://127.0.0.1:8787',
+        changeOrigin: true,
+      },
+    },
+  },
 })

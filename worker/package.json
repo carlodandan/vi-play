@@ -11,5 +11,8 @@
     "@cloudflare/workers-types": "^4.20260702.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.132.0"
+  },
+  "dependencies": {
+    "@vyla-entertainment/sdk": "^1.12.0"
   }
 }
