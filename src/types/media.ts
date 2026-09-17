@@ -70,14 +70,6 @@ export interface ProviderHealth {
   details?: string;
 }
 
-export interface AppSettings {
-  apiBaseUrl: string;
-  apiKey: string;
-  tmdbApiKey: string;
-  autoPlayNext: boolean;
-  defaultSubtitles: boolean;
-  preferredQuality: string;
-}
 
 export interface WatchProgress {
   mediaId: number;

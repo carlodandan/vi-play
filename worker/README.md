@@ -1,52 +1,45 @@
-# VPlay Cloudflare Worker (Vyla API Gateway)
+# VPlay Private Cloudflare Worker (Vyla Streaming Backend)
 
-This worker serves as the secure reverse proxy between your **VPlay** frontend (on Cloudflare Pages) and your self-hosted **Vyla API** server.
+This worker is a **self-contained private streaming backend** powered directly by `@vyla-entertainment/sdk` and bound to **Cloudflare Pages**.
 
 > **Notice**: For entertainment and educational purposes only.
 
 ---
 
-## Why this Worker is required
+## Features
 
-1. **Security**: Your master `VYLA_API_KEY` is securely stored as a Cloudflare Worker secret and is **never** sent to the client browser. The worker obtains and refreshes session tokens directly.
-2. **CORS & Mixed Content**: Cloudflare Pages runs on HTTPS. The worker provides full CORS support and HTTPS termination when your self-hosted instance is behind Cloudflare Tunnel, a VPS, or a reverse proxy.
-3. **Transparent SSE & Stream Proxying**: Proxies Server-Sent Events (`/movie`, `/tv`) and HLS/MP4 streams (`/api?url=...`) with media range request handling.
+- **Self-Contained**: Executes stream scrapers across 48+ providers directly inside Cloudflare Workers without requiring an external Node.js server or SQLite database.
+- **Server-Sent Events (SSE)**: Streams real-time progressive sources and subtitle tracks for `/movie` and `/tv`.
+- **Private Service Binding**: Configured with `workers_dev: false` — never exposed publicly on the internet; invoked securely by Cloudflare Pages via `env.VYLA_WORKER`.
+- **HLS & MP4 Proxy**: Built-in CORS handling and playlist URI rewriting (`/api?url=...`).
 
 ---
 
-## Deployment Steps
+## Configuration
 
-### 1. Install Wrangler
-In the `worker/` directory or root:
+### Environment Variables & Secrets
+Set your TMDB API Key in secrets (or `.dev.vars` for local dev):
 ```bash
-cd worker
-npm install
+npx wrangler secret put TMDB_API_KEY
 ```
 
-### 2. Configure Backend URL
-Edit `wrangler.jsonc` or set `VYLA_BACKEND_URL`:
-```jsonc
-"vars": {
-  "VYLA_BACKEND_URL": "https://your-vyla-server.com" // or Cloudflare Tunnel URL
-}
-```
-
-### 3. Add your Vyla API Key as a Secret
+### Local Development
+Run wrangler dev on port `8787`:
 ```bash
-npx wrangler secret put VYLA_API_KEY
+pnpm run dev
+# or: npx wrangler dev --port 8787
 ```
-Enter your `standard` or `partner` Vyla API key when prompted.
 
-### 4. Deploy to Cloudflare
+### Production Deployment
 ```bash
 npx wrangler deploy
 ```
 
-After deployment, Cloudflare will output your worker URL, e.g.:
-`https://vplay-vyla-proxy.<your-subdomain>.workers.dev`
+Once deployed, Cloudflare Pages calls this worker internally via the `[[services]]` binding in the root `wrangler.toml`:
+```toml
+[[services]]
+binding = "VYLA_WORKER"
+service = "vplay-vyla-proxy"
+```
+No worker URLs are hardcoded in the frontend.
 
-### 5. Link with VPlay
-In your VPlay web app:
-1. Click the **Settings (gear icon)** in the top navigation bar.
-2. Paste your Worker URL into **API Gateway / Worker URL**.
-3. Click **Test Connection** to confirm connectivity!

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Film, Tv, Sparkles, Bookmark, Search, Settings, Play, X, Menu } from 'lucide-react';
+import { Film, Tv, Sparkles, Bookmark, Search, Play, X, Menu } from 'lucide-react';
 import type { MediaType } from '../types/media.ts';
 
 export type NavCategory = 'all' | MediaType | 'watchlist';
@@ -9,7 +9,6 @@ interface NavbarProps {
   onSelectCategory: (cat: NavCategory) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onOpenSettings: () => void;
   watchlistCount: number;
 }
 
@@ -18,7 +17,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectCategory,
   searchQuery,
   onSearchChange,
-  onOpenSettings,
   watchlistCount,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -106,16 +104,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
           </div>
-
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="p-2 text-zinc-400 hover:text-purple-300 hover:bg-zinc-900 rounded-lg border border-zinc-800 hover:border-purple-500/30 transition-all cursor-pointer"
-            title="Settings (Vyla API Gateway / Worker)"
-            aria-label="Settings"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
 
           {/* Mobile menu toggle */}
           <button

@@ -4,9 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@vyla-entertainment/sdk': df4a7a65227b531f68b6fc98cae81fdaaa7d2c7f45b5496d084bec0a2a85c054
+
 importers:
 
   .:
+    dependencies:
+      '@vyla-entertainment/sdk':
+        specifier: ^1.12.0
+        version: 1.12.0(patch_hash=df4a7a65227b531f68b6fc98cae81fdaaa7d2c7f45b5496d084bec0a2a85c054)
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260702.1
@@ -417,6 +424,9 @@ packages:
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
 
+  '@vyla-entertainment/sdk@1.12.0':
+    resolution: {integrity: sha512-8f63oJ29c4gG0WJ6R2hQkZ4QdmW6OXruWM0eSmcYpmbW+PKaTmQGOJn4jQNIKvDU09BLRFicZNs/6SJ3Wc0OYg==}
+
   blake3-wasm@2.1.5:
     resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
 
@@ -765,6 +775,8 @@ snapshots:
   '@sindresorhus/is@7.2.0': {}
 
   '@speed-highlight/core@1.2.24': {}
+
+  '@vyla-entertainment/sdk@1.12.0(patch_hash=df4a7a65227b531f68b6fc98cae81fdaaa7d2c7f45b5496d084bec0a2a85c054)': {}
 
   blake3-wasm@2.1.5: {}
 

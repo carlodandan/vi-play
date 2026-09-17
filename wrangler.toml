@@ -1,0 +1,11 @@
+# Cloudflare Pages Configuration with Private Worker Service Binding
+name = "vplay"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Private Service Binding to the Vyla proxy worker
+# The worker is NOT public (workers_dev = false) and only reachable through this internal binding.
+[[services]]
+binding = "VYLA_WORKER"
+service = "vplay-vyla-proxy"

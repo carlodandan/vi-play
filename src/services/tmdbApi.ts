@@ -1,6 +1,5 @@
 import { CURATED_MEDIA } from '../data/curatedMedia.ts';
 import type { MediaItem, MediaType, WatchProgress } from '../types/media.ts';
-import { getAppSettings } from './vylaApi.ts';
 
 const WATCHLIST_KEY = 'vplay_watchlist';
 const HISTORY_KEY = 'vplay_history';
@@ -17,12 +16,12 @@ export async function getMediaList({
   query?: string;
   genre?: string;
 } = {}): Promise<MediaItem[]> {
-  const settings = getAppSettings();
+  const envTmdbKey = (import.meta as any).env?.VITE_TMDB_API_KEY;
 
-  // If user provided a TMDB API Key and entered a query, search live TMDB!
-  if (query.trim() && settings.tmdbApiKey) {
+  // If TMDB API Key is configured via environment and user entered a query, search live TMDB!
+  if (query.trim() && envTmdbKey) {
     try {
-      const liveResults = await searchTmdbLive(query.trim(), settings.tmdbApiKey);
+      const liveResults = await searchTmdbLive(query.trim(), envTmdbKey);
       if (liveResults.length > 0) {
         return liveResults;
       }

@@ -1,0 +1,25 @@
+diff --git a/src/utils/helpers.js b/src/utils/helpers.js
+index 2b64311d5e69cac7894cb5f0911940f90cb9ac2d..8c6058e772041f2f45f7ac7b146758bfee87b8a4 100644
+--- a/src/utils/helpers.js
++++ b/src/utils/helpers.js
+@@ -52,11 +52,15 @@ function pruneHelperCache(cache) {
+     }
+ }
+ 
+-setInterval(() => {
+-    pruneHelperCache(tmdbValidationCache);
+-    pruneHelperCache(tmdbInfoCache);
+-    pruneHelperCache(anilistCache);
+-}, 60000).unref();
++if (typeof WebSocketPair === 'undefined') {
++    try {
++        setInterval(() => {
++            pruneHelperCache(tmdbValidationCache);
++            pruneHelperCache(tmdbInfoCache);
++            pruneHelperCache(anilistCache);
++        }, 60000)?.unref?.();
++    } catch {}
++}
+ 
+ function cacheGet(cache, key) {
+     const entry = cache.get(key);

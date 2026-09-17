@@ -1,31 +1,15 @@
-import type { AppSettings, ProviderHealth, StreamSubtitle, VylaStreamEvent } from '../types/media.ts';
+import type { ProviderHealth, StreamSubtitle, VylaStreamEvent } from '../types/media.ts';
 
-const SETTINGS_KEY = 'vplay_settings';
 const TOKEN_KEY = 'vplay_session_token';
 const TOKEN_EXPIRY_KEY = 'vplay_session_expiry';
 
-export const DEFAULT_SETTINGS: AppSettings = {
-  apiBaseUrl: 'http://localhost:7860',
-  apiKey: '',
-  tmdbApiKey: '',
-  autoPlayNext: true,
-  defaultSubtitles: true,
-  preferredQuality: 'Auto',
-};
-
-export function getAppSettings(): AppSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
-}
-
-export function saveAppSettings(settings: AppSettings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-}
+/**
+ * API Base URL:
+ * - Local dev: hardcoded http://127.0.0.1:8787 (Wrangler dev server for the worker)
+ * - Production: empty string '', resolving to same-origin Cloudflare Pages,
+ *   which binds directly to the private Cloudflare Worker via Service Binding.
+ */
+export const API_BASE_URL = import.meta.env.DEV ? 'http://127.0.0.1:8787' : '';
 
 /**
  * Checks if a streaming URL points to an MP4 video vs an HLS playlist
@@ -44,8 +28,7 @@ export function isMp4Stream(url: string): boolean {
  * Obtains or refreshes a session token for client-side player calls
  */
 export async function getSessionToken(forceRefresh = false): Promise<string | null> {
-  const settings = getAppSettings();
-  const base = settings.apiBaseUrl.replace(/\/+$/, '');
+  const base = API_BASE_URL;
 
   if (!forceRefresh) {
     const existing = sessionStorage.getItem(TOKEN_KEY);
@@ -57,20 +40,14 @@ export async function getSessionToken(forceRefresh = false): Promise<string | nu
   }
 
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (settings.apiKey) {
-      headers['Authorization'] = `Bearer ${settings.apiKey}`;
-    }
-
     const res = await fetch(`${base}/api/auth`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!res.ok) {
-      // If auth returns 404 or fails, we may be connecting to a direct mock or open proxy
       console.warn(`Auth returned status ${res.status}`);
       return null;
     }
@@ -105,8 +82,7 @@ export async function streamMediaSources({
   onEvent: (event: VylaStreamEvent) => void;
   signal?: AbortSignal;
 }): Promise<void> {
-  const settings = getAppSettings();
-  const base = settings.apiBaseUrl.replace(/\/+$/, '');
+  const base = API_BASE_URL;
   const isTv = season !== undefined && episode !== undefined;
 
   const url = isTv
@@ -120,8 +96,6 @@ export async function streamMediaSources({
 
   if (token) {
     headers['X-Session-Token'] = token;
-  } else if (settings.apiKey) {
-    headers['Authorization'] = `Bearer ${settings.apiKey}`;
   }
 
   const response = await fetch(url, { headers, signal });
@@ -177,8 +151,7 @@ export async function checkApiHealth(): Promise<{
   providers?: ProviderHealth[];
   latencyMs: number;
 }> {
-  const settings = getAppSettings();
-  const base = settings.apiBaseUrl.replace(/\/+$/, '');
+  const base = API_BASE_URL;
   const startTime = performance.now();
 
   try {
@@ -186,8 +159,6 @@ export async function checkApiHealth(): Promise<{
     const headers: Record<string, string> = {};
     if (token) {
       headers['X-Session-Token'] = token;
-    } else if (settings.apiKey) {
-      headers['Authorization'] = `Bearer ${settings.apiKey}`;
     }
 
     const res = await fetch(`${base}/api/health`, {
@@ -207,7 +178,7 @@ export async function checkApiHealth(): Promise<{
       };
     }
 
-    // Try root gateway status if /api/health required auth or wasn't available
+    // Try root gateway status
     const rootRes = await fetch(`${base}/`, { method: 'GET' }).catch(() => null);
     if (rootRes?.ok) {
       return {
@@ -242,8 +213,7 @@ export async function fetchExtraSubtitles(
   season?: number,
   episode?: number
 ): Promise<StreamSubtitle[]> {
-  const settings = getAppSettings();
-  const base = settings.apiBaseUrl.replace(/\/+$/, '');
+  const base = API_BASE_URL;
   const token = await getSessionToken().catch(() => null);
 
   const endpoint = type === 'movie'

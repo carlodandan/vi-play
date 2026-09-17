@@ -6,7 +6,5 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "vars": {
-    "VYLA_BACKEND_URL": "http://localhost:7860"
-  }
+  "workers_dev": false
 }

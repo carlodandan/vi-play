@@ -2,3 +2,5 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+patchedDependencies:
+  '@vyla-entertainment/sdk': patches/@vyla-entertainment__sdk.patch
