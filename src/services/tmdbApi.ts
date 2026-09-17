@@ -97,10 +97,10 @@ async function searchTmdbLive(query: string, apiKey: string): Promise<MediaItem[
         overview: r.overview || 'No synopsis available.',
         poster_path: r.poster_path
           ? `https://image.tmdb.org/t/p/w500${r.poster_path}`
-          : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop&q=80',
+          : `https://image.tmdb.org/t/p/w600_and_h900_face${r.poster_path}`,
         backdrop_path: r.backdrop_path
           ? `https://image.tmdb.org/t/p/original${r.backdrop_path}`
-          : 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1280&auto=format&fit=crop&q=80',
+          : `https://media.themoviedb.org/t/p/w533_and_h300_face${r.backdrop_path}`,
         vote_average: Number(r.vote_average?.toFixed(1)) || 7.0,
         vote_count: r.vote_count || 0,
         release_date: r.release_date || r.first_air_date || '2024',

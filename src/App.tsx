@@ -132,7 +132,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-zinc-100 flex flex-col selection:bg-purple-600 selection:text-white">
+    <div className="min-h-screen text-zinc-100 flex flex-col selection:bg-rose-800 selection:text-white" style={{ background: 'var(--color-bg)' }}>
       {/* Top Disclaimer Banner */}
       <DisclaimerBanner />
 

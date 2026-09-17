@@ -7,7 +7,6 @@ interface MediaCardProps {
   onClick: (item: MediaItem) => void;
   isWatchlisted: boolean;
   onToggleWatchlist: (id: number) => void;
-  rank?: number;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({
@@ -16,103 +15,116 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   onClick,
   isWatchlisted,
   onToggleWatchlist,
-  rank,
 }) => {
-  const typeBadgeColor =
+  const typeBadgeStyle =
     item.type === 'anime'
-      ? 'bg-rose-500/90 text-white shadow-rose-950/40'
+      ? { background: 'rgba(225,29,72,0.85)', color: '#fff' }
       : item.type === 'tv'
-      ? 'bg-indigo-500/90 text-white shadow-indigo-950/40'
-      : 'bg-purple-600/90 text-white shadow-purple-950/40';
+      ? { background: 'rgba(79,70,229,0.85)', color: '#fff' }
+      : { background: 'rgba(255,255,255,0.12)', color: '#f1f5f9', backdropFilter: 'blur(4px)' };
 
   const typeName = item.type === 'anime' ? 'Anime' : item.type === 'tv' ? 'Series' : 'Movie';
 
   return (
     <div
       onClick={() => onClick(item)}
-      className="group relative flex flex-col bg-zinc-900/50 rounded-xl overflow-hidden border border-zinc-800/80 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-950/30 hover:-translate-y-1 cursor-pointer"
+      className="group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300"
+      style={{
+        background: 'var(--color-surface)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        transform: 'translateY(0)',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-accent)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 32px var(--color-accent-glow)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.05)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+      }}
     >
-      {/* Poster Container */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
+      {/* Poster */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden" style={{ background: '#060608' }}>
         <img
           src={item.poster_path}
           alt={item.title}
           loading="lazy"
-          className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500 ease-out"
+          className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
         />
 
-        {/* Media Type Badge */}
+        {/* Type badge — top left */}
         <span
-          className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md backdrop-blur-md shadow-md ${typeBadgeColor}`}
+          className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md"
+          style={typeBadgeStyle}
         >
           {typeName}
         </span>
 
-        {/* Rating Badge */}
-        <span className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-md bg-zinc-950/85 text-amber-400 border border-zinc-700/60 backdrop-blur-md">
-          <Star className="w-3 h-3 fill-amber-400" />
+        {/* Rating badge — top right */}
+        <span
+          className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md text-amber-400"
+          style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <Star className="w-2.5 h-2.5 fill-amber-400" aria-hidden="true" />
           {item.vote_average.toFixed(1)}
         </span>
 
-        {/* Rank indicator badge if supplied */}
-        {rank !== undefined && (
-          <span className="absolute bottom-2.5 left-2.5 px-2 py-0.5 text-[11px] font-extrabold rounded-md bg-purple-600/90 text-white border border-purple-400/40 shadow-lg shadow-purple-950/60">
-            #{rank}
-          </span>
-        )}
-
-        {/* Quick Action Overlay on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/95 via-zinc-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+        {/* Hover overlay with play + watchlist */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2.5"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 50%, transparent 100%)' }}
+        >
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onPlay(item);
-            }}
-            className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center shadow-xl shadow-purple-600/50 transform scale-90 group-hover:scale-100 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-            title="Play Stream"
+            onClick={(e) => { e.stopPropagation(); onPlay(item); }}
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white transition-all cursor-pointer transform scale-90 group-hover:scale-100 active:scale-95"
+            style={{ background: 'var(--color-accent)', boxShadow: '0 0 20px var(--color-accent-glow)' }}
+            title="Play"
           >
-            <Play className="w-5 h-5 fill-current ml-0.5" />
+            <Play className="w-5 h-5 fill-current ml-0.5" aria-hidden="true" />
           </button>
 
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleWatchlist(item.id);
+            onClick={(e) => { e.stopPropagation(); onToggleWatchlist(item.id); }}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border"
+            style={{
+              background: isWatchlisted ? 'rgba(225,29,72,0.20)' : 'rgba(0,0,0,0.75)',
+              backdropFilter: 'blur(6px)',
+              borderColor: isWatchlisted ? 'var(--color-accent)' : 'rgba(255,255,255,0.15)',
+              color: isWatchlisted ? '#fda4af' : '#d4d4d8',
             }}
-            className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all cursor-pointer ${
-              isWatchlisted
-                ? 'bg-purple-950/80 border-purple-500 text-purple-300'
-                : 'bg-zinc-900/80 hover:bg-zinc-800 border-zinc-700 text-zinc-300 hover:text-white'
-            }`}
             title={isWatchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
           >
-            {isWatchlisted ? <Check className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+            {isWatchlisted ? <Check className="w-4 h-4" aria-hidden="true" /> : <Bookmark className="w-4 h-4" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
-      {/* Media Info */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between bg-zinc-900/30">
+      {/* Card info */}
+      <div className="px-3 py-3 flex flex-col flex-1 justify-between" style={{ background: 'var(--color-surface)' }}>
         <div>
-          <h3 className="text-sm font-bold text-zinc-100 group-hover:text-purple-300 transition-colors line-clamp-1">
+          <h3 className="text-sm font-semibold text-zinc-100 line-clamp-1 group-hover:text-white transition-colors">
             {item.title}
           </h3>
-          <p className="text-xs text-zinc-400 mt-1 line-clamp-1">
-            {item.genres.join(' • ')}
+          <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-1">
+            {item.genres.slice(0, 2).join(' · ')}
           </p>
         </div>
-        <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-2.5 font-medium">
+        <div className="flex items-center justify-between text-[11px] text-zinc-600 mt-2 font-medium">
           <span>{item.release_date?.slice(0, 4)}</span>
           {item.seasons_count ? (
-            <span>
-              {item.seasons_count} {item.seasons_count === 1 ? 'Season' : 'Seasons'}
-            </span>
+            <span className="text-zinc-500">{item.seasons_count} {item.seasons_count === 1 ? 'Season' : 'Seasons'}</span>
           ) : (
-            <span className="text-zinc-600">HD</span>
+            <span
+              className="font-semibold text-[10px] px-1.5 py-0.5 rounded"
+              style={{ background: 'rgba(225,29,72,0.12)', color: '#fda4af' }}
+            >
+              HD
+            </span>
           )}
         </div>
       </div>
     </div>
   );
 };
-

@@ -20,10 +20,7 @@ export const ContinueWatchingRow: React.FC<ContinueWatchingRowProps> = ({
   const [history, setHistory] = useState<WatchHistoryItem[]>(getWatchHistory);
 
   useEffect(() => {
-    const handleUpdate = () => {
-      setHistory(getWatchHistory());
-    };
-
+    const handleUpdate = () => setHistory(getWatchHistory());
     window.addEventListener('storage', handleUpdate);
     window.addEventListener(HISTORY_CHANGE_EVENT, handleUpdate);
     return () => {
@@ -41,91 +38,98 @@ export const ContinueWatchingRow: React.FC<ContinueWatchingRowProps> = ({
   if (history.length === 0) return null;
 
   return (
-    <section className="mb-10">
+    <section className="mb-10 animate-slideUp">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-2.5">
-          <div className="text-purple-400">
-            <Clock className="w-5 h-5" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-            Continue Watching
-          </h2>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-950/60 text-purple-300 border border-purple-800/60">
+          <div className="w-1 h-6 rounded-full shrink-0" style={{ background: 'var(--color-accent)' }} />
+          <Clock className="w-4 h-4 text-zinc-400" aria-hidden="true" />
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Continue Watching</h2>
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(225,29,72,0.12)', color: '#fda4af', border: '1px solid rgba(225,29,72,0.25)' }}
+          >
             {history.length}
           </span>
         </div>
       </div>
 
+      {/* Horizontal scroll track */}
       <div
         className="flex items-stretch gap-4 overflow-x-auto pb-4 pt-1 px-1 scrollbar-none snap-x snap-mandatory"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {history.map((entry) => {
           const isTv = entry.season !== undefined && entry.episode !== undefined;
-          const subLabel = isTv ? `S${entry.season} : E${entry.episode}` : entry.item.genres[0] || 'Movie';
+          const subLabel = isTv ? `S${entry.season} · E${entry.episode}` : entry.item.genres[0] || 'Movie';
 
           return (
             <div
               key={`${entry.item.id}-${entry.season ?? 0}-${entry.episode ?? 0}`}
               onClick={() => onSelectItem(entry.item)}
-              className="group relative shrink-0 w-[240px] sm:w-[280px] bg-zinc-900/60 rounded-xl overflow-hidden border border-zinc-800/80 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-950/30 cursor-pointer snap-start flex flex-col"
+              className="group relative shrink-0 w-[240px] sm:w-[280px] rounded-xl overflow-hidden snap-start flex flex-col cursor-pointer transition-all duration-300"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid rgba(255,255,255,0.05)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--color-accent)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 24px var(--color-accent-glow)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.05)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+              }}
             >
-              {/* Backdrop Container */}
-              <div className="relative aspect-video w-full overflow-hidden bg-zinc-950">
+              {/* Backdrop */}
+              <div className="relative aspect-video w-full overflow-hidden" style={{ background: '#060608' }}>
                 <img
                   src={entry.item.backdrop_path || entry.item.poster_path}
                   alt={entry.item.title}
                   loading="lazy"
                   className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500 ease-out"
                 />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.30) 50%, transparent 100%)' }} />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-
-                {/* Quick Play Button in center on hover */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-950/30">
+                {/* Play on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onPlay(entry.item, entry.season, entry.episode);
-                    }}
-                    className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-600/40 transform scale-90 group-hover:scale-100 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                    title="Resume playback"
+                    onClick={(e) => { e.stopPropagation(); onPlay(entry.item, entry.season, entry.episode); }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white transition-all cursor-pointer transform scale-90 group-hover:scale-100"
+                    style={{ background: 'var(--color-accent)', boxShadow: '0 0 20px var(--color-accent-glow)' }}
+                    title="Resume"
                   >
-                    <Play className="w-5 h-5 fill-current ml-0.5" />
+                    <Play className="w-5 h-5 fill-current ml-0.5" aria-hidden="true" />
                   </button>
                 </div>
 
-                {/* Remove from history button */}
+                {/* Remove button */}
                 <button
                   onClick={(e) => handleRemove(e, entry)}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-zinc-950/70 hover:bg-rose-950/80 text-zinc-400 hover:text-rose-300 border border-zinc-700/60 hover:border-rose-500/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                  title="Remove from history"
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center border opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-zinc-400 hover:text-rose-300"
+                  style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', borderColor: 'rgba(255,255,255,0.10)' }}
+                  title="Remove"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
 
-                {/* Progress bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-zinc-800/80">
+                {/* Progress bar — red */}
+                <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <div
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-r"
-                    style={{ width: `${entry.progressPercent}%` }}
+                    className="h-full rounded-r"
+                    style={{ width: `${entry.progressPercent}%`, background: 'var(--color-accent)', boxShadow: '0 0 6px var(--color-accent-glow)' }}
                   />
                 </div>
               </div>
 
-              {/* Media Title & Episode */}
-              <div className="p-3 flex flex-col justify-between flex-1">
+              {/* Info */}
+              <div className="px-3 py-3 flex flex-col justify-between flex-1">
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-purple-300 transition-colors line-clamp-1">
-                    {entry.item.title}
-                  </h3>
-                  <p className="text-xs text-purple-400 font-medium mt-0.5">
-                    {subLabel}
-                  </p>
+                  <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors line-clamp-1">{entry.item.title}</h3>
+                  <p className="text-xs font-medium mt-0.5" style={{ color: '#fda4af' }}>{subLabel}</p>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-2">
+                <div className="flex items-center justify-between text-[11px] text-zinc-600 mt-2">
                   <span>Resume watching</span>
-                  <span>{entry.progressPercent}%</span>
+                  <span className="font-semibold" style={{ color: 'var(--color-accent)' }}>{entry.progressPercent}%</span>
                 </div>
               </div>
             </div>
