@@ -1,0 +1,15 @@
+{
+  "name": "vplay-vyla-proxy",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker proxy for self-hosted Vyla Streaming API",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.132.0"
+  }
+}
