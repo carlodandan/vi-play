@@ -1,8 +1,11 @@
-packages: ['.']
-
+packages:
+  - .
 allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
 patchedDependencies:
   '@vyla-entertainment/sdk': patches/@vyla-entertainment__sdk.patch
