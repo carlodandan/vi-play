@@ -81,21 +81,21 @@ VPlay is engineered as a modern decoupled web application designed for global de
 graph TD
     Client["User Browser (React 19 + HLS.js)"]
     
-    subgraph Cloudflare Global Network
+    subgraph CF ["Cloudflare Global Network"]
         Pages["Cloudflare Pages (Static Frontend)"]
-        Functions["Pages Functions Router (/functions/[[path]].ts)"]
+        Functions["Pages Functions Router (functions/router)"]
         Worker["Private Cloudflare Worker (vplay-vyla-proxy)"]
     end
     
     TMDB["TMDB API (themoviedb.org)"]
-    Scrapers["48+ Video Scrapers (Vidlink, Vidfast, Vixsrc, etc.)"]
+    Scrapers["48+ Video Scrapers (Vidlink, Vidfast, etc.)"]
     
-    Client -->|HTTPS (Static Assets)| Pages
-    Client -->|Same-Origin /movie, /tv, /api| Functions
-    Functions -->|Service Binding (VYLA_WORKER)| Worker
+    Client -->|HTTPS Static Assets| Pages
+    Client -->|Same-Origin API Requests| Functions
+    Functions -->|Service Binding: VYLA_WORKER| Worker
     Worker -->|Edge-Cached Discovery| TMDB
     Worker -->|Concurrent Stream Resolution| Scrapers
-    Client -->|Proxied Playlists & Media Segments| Worker
+    Client -->|Proxied Playlists and Media Segments| Worker
 ```
 
 For complete architecture diagrams and data flow pipelines, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

@@ -22,46 +22,46 @@ The two layers communicate seamlessly in production via **Cloudflare Service Bin
 graph TD
     User["User / Web Browser"]
     
-    subgraph Cloudflare Global Network
+    subgraph CF ["Cloudflare Global Network"]
         Pages["Cloudflare Pages (Frontend SPA)"]
-        Functions["Pages Functions (functions/[[path]].ts)"]
+        Functions["Pages Functions Router (functions/router)"]
         Worker["Cloudflare Worker (vplay-vyla-proxy)"]
     end
     
     TMDB["TMDB API (themoviedb.org)"]
-    Scrapers["48+ Video Scrapers (Vidlink, Vidfast, Vixsrc, etc.)"]
+    Scrapers["48+ Video Scrapers (Vidlink, Vidfast, etc.)"]
     
-    User -->|HTTPS| Pages
-    Pages -->|Same-Origin /movie, /tv, /api| Functions
-    Functions -->|Private Service Binding (VYLA_WORKER)| Worker
-    Worker -->|HTTPS (Cached at Edge)| TMDB
-    Worker -->|Scrape / Stream Resolvers| Scrapers
+    User -->|HTTPS Static Assets| Pages
+    Pages -->|Same-Origin API Requests| Functions
+    Functions -->|Private Service Binding: VYLA_WORKER| Worker
+    Worker -->|Edge-Cached TMDB Queries| TMDB
+    Worker -->|Scrape and Stream Resolvers| Scrapers
 ```
 
 ### 2.2 Container Diagram
 
 ```mermaid
 graph LR
-    subgraph Client [Browser Client]
+    subgraph Client ["Browser Client"]
         UI["React 19 UI (Cinema Dark)"]
         Cache["In-Memory Cache (SWR / LRU)"]
         Storage["LocalStorage (Watchlist & History)"]
         Player["HLS.js / HTML5 Video Player"]
     end
 
-    subgraph Edge [Cloudflare Edge Gateway]
-        PagesRouter["Pages Router (/functions/[[path]].ts)"]
-        ServiceBinding["Service Binding (env.VYLA_WORKER)"]
+    subgraph Edge ["Cloudflare Edge Gateway"]
+        PagesRouter["Pages Router (functions/router)"]
+        ServiceBinding["Service Binding: env.VYLA_WORKER"]
         
-        subgraph ProxyWorker [Private Worker Engine]
+        subgraph ProxyWorker ["Private Worker Engine"]
             RateLimiter["Sliding-Window Rate Limiter"]
-            EdgeCache["Edge Cache Engine (cf.cacheTtl)"]
+            EdgeCache["Edge Cache Engine: cf.cacheTtl"]
             DiscoveryEngine["TMDB Discovery Engine"]
             StreamingEngine["Vyla SDK SSE Scraper Engine"]
         end
     end
 
-    subgraph External [External APIs]
+    subgraph External ["External APIs"]
         TMDB_API["TMDB API"]
         StreamSources["Third-Party Video Hosts"]
     end
@@ -77,7 +77,7 @@ graph LR
     EdgeCache --> StreamingEngine
     DiscoveryEngine --> TMDB_API
     StreamingEngine --> StreamSources
-    Player -->|Proxied HLS/MP4 Streams| StreamingEngine
+    Player -->|Proxied Media Streams| StreamingEngine
 ```
 
 ---
