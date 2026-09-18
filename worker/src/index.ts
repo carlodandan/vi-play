@@ -574,6 +574,13 @@ export default {
               ),
             ]);
 
+            if (
+              (tvRes.status !== "fulfilled" || !tvRes.value.ok) &&
+              (movieRes.status !== "fulfilled" || !movieRes.value.ok)
+            ) {
+              throw new Error("TMDB anime feed requests failed");
+            }
+
             const tvData: any = tvRes.status === "fulfilled" && tvRes.value.ok ? await tvRes.value.json() : { results: [] };
             const movieData: any = movieRes.status === "fulfilled" && movieRes.value.ok ? await movieRes.value.json() : { results: [] };
 
@@ -677,6 +684,13 @@ export default {
                 { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
               ),
             ]);
+
+            if (
+              (tvRes.status !== "fulfilled" || !tvRes.value.ok) &&
+              (movieRes.status !== "fulfilled" || !movieRes.value.ok)
+            ) {
+              throw new Error("TMDB anime feed requests failed");
+            }
 
             const tvData: any = tvRes.status === "fulfilled" && tvRes.value.ok ? await tvRes.value.json() : { results: [] };
             const movieData: any = movieRes.status === "fulfilled" && movieRes.value.ok ? await movieRes.value.json() : { results: [] };
@@ -792,7 +806,12 @@ export default {
           signal: AbortSignal.timeout(8000),
           cf: { cacheTtl: 86400, cacheEverything: true },
         } as any);
-        if (!res.ok) return null;
+        if (res.status === 404) return null;
+        if (!res.ok) {
+          throw new Error(
+            `TMDB ${entity} request failed with status ${res.status}`,
+          );
+        }
         const data: any = await res.json();
         return { data, entity };
       };

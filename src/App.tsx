@@ -10,7 +10,7 @@ import { MediaGrid } from "./components/MediaGrid.tsx";
 import { MediaModal } from "./components/MediaModal.tsx";
 import { VideoPlayerModal } from "./components/VideoPlayerModal.tsx";
 import { Footer } from "./components/Footer.tsx";
-import type { MediaItem } from "./types/media.ts";
+import type { MediaItem, MediaType } from "./types/media.ts";
 import { CURATED_MEDIA } from "./data/curatedMedia.ts";
 import {
   getMediaList,
@@ -217,16 +217,16 @@ export function App() {
 
   // ── Helper to find any media item from existing state/cache ───────────────
   const findKnownItem = useCallback(
-    (id: number): MediaItem | undefined => {
+    (id: number, type: MediaType): MediaItem | undefined => {
       return (
-        mediaList.find((m) => m.id === id) ||
-        top10List.find((m) => m.id === id) ||
-        animeList.find((m) => m.id === id) ||
-        moviesList.find((m) => m.id === id) ||
-        tvList.find((m) => m.id === id) ||
-        sciFiList.find((m) => m.id === id) ||
-        heroItems.find((m) => m.id === id) ||
-        CURATED_MEDIA.find((m) => m.id === id)
+        mediaList.find((m) => m.id === id && m.type === type) ||
+        top10List.find((m) => m.id === id && m.type === type) ||
+        animeList.find((m) => m.id === id && m.type === type) ||
+        moviesList.find((m) => m.id === id && m.type === type) ||
+        tvList.find((m) => m.id === id && m.type === type) ||
+        sciFiList.find((m) => m.id === id && m.type === type) ||
+        heroItems.find((m) => m.id === id && m.type === type) ||
+        CURATED_MEDIA.find((m) => m.id === id && m.type === type)
       );
     },
     [mediaList, top10List, animeList, moviesList, tvList, sciFiList, heroItems],
@@ -246,7 +246,7 @@ export function App() {
       const rawS = watchMatch[3] ? Number(watchMatch[3]) : undefined;
       const rawE = watchMatch[4] ? Number(watchMatch[4]) : undefined;
 
-      const known = findKnownItem(id);
+      const known = findKnownItem(id, type);
       const isSeries =
         type === "tv" ||
         Boolean(rawS && rawE) ||
@@ -263,6 +263,7 @@ export function App() {
       const current = activePlayerRef.current;
       if (
         current?.item.id === id &&
+        current.item.type === type &&
         current.season === s &&
         current.episode === e
       ) {
@@ -273,9 +274,13 @@ export function App() {
       if (known) {
         setActivePlayer({ item: known, season: s, episode: e });
       } else {
-        const queryMediaType = isSeries ? "tv" : type === "movie" ? "movie" : undefined;
+        const queryMediaType = isSeries
+          ? "tv"
+          : type === "movie"
+            ? "movie"
+            : undefined;
         fetchMediaDetail(id, type, queryMediaType).then((fetched) => {
-          if (fetched) {
+          if (fetched && window.location.pathname === path) {
             const finalIsSeries =
               fetched.media_type === "tv" ||
               fetched.type === "tv" ||
@@ -298,16 +303,19 @@ export function App() {
       const id = Number(detailMatch[2]);
 
       setActivePlayer(null);
-      if (detailModalItemRef.current?.id === id) {
+      if (
+        detailModalItemRef.current?.id === id &&
+        detailModalItemRef.current.type === type
+      ) {
         return;
       }
 
-      const known = findKnownItem(id);
+      const known = findKnownItem(id, type);
       if (known) {
         setDetailModalItem(known);
       } else {
         fetchMediaDetail(id, type).then((fetched) => {
-          if (fetched) {
+          if (fetched && window.location.pathname === path) {
             setDetailModalItem(fetched);
           }
         });
@@ -383,12 +391,12 @@ export function App() {
 
   const handleCloseModal = () => {
     setDetailModalItem(null);
-    navigate(getCategoryPath(currentCategory));
+    navigate(getCategoryPath(currentCategory), { replace: true });
   };
 
   const handleClosePlayer = () => {
     setActivePlayer(null);
-    navigate(getCategoryPath(currentCategory));
+    navigate(getCategoryPath(currentCategory), { replace: true });
   };
 
   return (
