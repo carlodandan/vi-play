@@ -511,7 +511,7 @@ export function App() {
                 />
 
                 <MediaRow
-                  title="Top 10 on VPlay This Week"
+                  title="Top 10 on V-Play This Week"
                   subtitle="Trending now — updated weekly"
                   icon={<Flame className="w-5 h-5 text-amber-400" />}
                   showRank={true}

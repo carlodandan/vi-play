@@ -1,4 +1,4 @@
-# VPlay — Modern Edge-Powered Streaming Platform
+# V-Play — Modern Edge-Powered Streaming Platform
 
 <div align="center">
 
@@ -18,7 +18,7 @@
 
 > [!IMPORTANT]
 > **Educational & Entertainment Disclaimer**:  
-> VPlay is an experimental, open-source media player interface created strictly for **educational and research purposes**. VPlay does not host, upload, scrape, store, or distribute any video files, streams, or media on its own servers. All content discovery is powered by public APIs (such as TMDB), and stream resolution is performed via third-party external providers.
+> V-Play is an experimental, open-source media player interface created strictly for **educational and research purposes**. V-Play does not host, upload, scrape, store, or distribute any video files, streams, or media on its own servers. All content discovery is powered by public APIs (such as TMDB), and stream resolution is performed via third-party external providers.
 
 ---
 
@@ -39,7 +39,8 @@
 
 ## Overview
 
-VPlay is engineered as a modern decoupled web application designed for global deployment on Cloudflare's edge network:
+V-Play is engineered as a modern decoupled web application designed for global deployment on Cloudflare's edge network:
+
 1. **Frontend**: A sleek, responsive Single Page Application (SPA) hosted on **Cloudflare Pages**, styled in a modern **Cinema Dark / OLED** visual system.
 2. **Private Streaming Worker**: A standalone, self-contained Cloudflare Worker (`vplay-api`) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers without requiring an external VPS or Node.js server.
 3. **Private Service Binding**: The worker is private (`workers_dev = false`) and communicates with Cloudflare Pages via zero-latency, same-origin internal Service Bindings (`VYLA_WORKER`).
@@ -49,6 +50,7 @@ VPlay is engineered as a modern decoupled web application designed for global de
 ## Key Features
 
 ### 🎬 Streaming & Playback Experience
+
 - **Adaptive Bitrate Streaming**: Built on `hls.js` with dynamic quality switching (360p, 720p, 1080p, 4K) and auto-recovery.
 - **Direct MP4 Playback**: Seamless fallback to native HTML5 video for direct MP4 sources.
 - **Progressive Stream Discovery**: Real-time Server-Sent Events (SSE) stream endpoints (`/movie`, `/tv`) fan out concurrent scraper requests and yield playable links immediately.
@@ -56,18 +58,21 @@ VPlay is engineered as a modern decoupled web application designed for global de
 - **Multi-Language Subtitles**: Embedded subtitle track selector with VTT/SRT styling and dedicated track fetching.
 
 ### 🌐 Live Discovery & Catalog Browsing
+
 - **Dynamic TMDB Feeds**: Live **Top 10 This Week**, **Trending Anime**, **Popular Movies**, and **Binge-Worthy TV Series** proxied via the worker backend.
 - **Dedicated Anime Filter**: Japanese animation is filtered at the edge (`with_genres=16&with_original_language=ja`) ensuring only authentic anime displays in anime shelves.
 - **Zero Layout Shift (Instant First Paint)**: Ships with a curated skeleton catalog so initial page render occurs in 0ms before live network requests resolve.
 - **Full-Bleed Hero Carousel**: Auto-advancing banner with cinematic vignettes, backdrop crossfades, and boundary-safe slide indexing.
 
 ### ⚡ Performance, Caching & Edge Security
+
 - **3-Tier Caching System**: Frontend in-memory LRU cache (0ms tab switches), Cloudflare Edge CDN cache (1h TTL), and instant static fallback.
 - **350ms Search Debouncing**: Eliminates network spam while typing search queries.
 - **IP-Based Sliding-Window Rate Limiter**: Restricts catalog discovery to 60 req/min and streaming queries to 15 req/min with `429 Too Many Requests` + `Retry-After` headers.
 - **Stateless HMAC Sessions**: Cryptographically signed SHA-256 session tokens with 30-minute expiration.
 
 ### 🎨 Cinema Dark Design & Accessibility
+
 - **OLED Cinema Aesthetic**: Deep true-black surfaces (`#000000`), rose-red accents (`#E11D48`), and frosted glassmorphic navigation.
 - **Display Typography**: Google Fonts **Bebas Neue** for dramatic cinematic headers and **Inter** for readable metadata.
 - **Rank Badges**: Netflix-style numbered Top 10 shelf with oversized bottom-right gradient strokes.
@@ -80,16 +85,16 @@ VPlay is engineered as a modern decoupled web application designed for global de
 ```mermaid
 graph TD
     Client["User Browser (React 19 + HLS.js)"]
-    
+
     subgraph CF ["Cloudflare Global Network"]
         Pages["Cloudflare Pages (Static Frontend)"]
         Functions["Pages Functions Router (functions/router)"]
         Worker["Private Cloudflare Worker (vplay-api)"]
     end
-    
+
     TMDB["TMDB API (themoviedb.org)"]
     Scrapers["48+ Video Scrapers (Vidlink, Vidfast, etc.)"]
-    
+
     Client -->|HTTPS Static Assets| Pages
     Client -->|Same-Origin API Requests| Functions
     Functions -->|Service Binding: VYLA_WORKER| Worker
@@ -104,16 +109,16 @@ For complete architecture diagrams and data flow pipelines, read [docs/ARCHITECT
 
 ## Technology Stack
 
-| Layer | Technologies |
-|---|---|
-| **Frontend Framework** | React 19, TypeScript, Vite 8 |
-| **Styling & Icons** | Tailwind CSS v4, Lucide React |
-| **Video Engine** | HLS.js, HTML5 Video API |
-| **Edge Hosting** | Cloudflare Pages, Cloudflare Pages Functions |
-| **Backend & Scraping** | Cloudflare Workers (`workerd`), `@vyla-entertainment/sdk` |
-| **Metadata Provider** | The Movie Database (TMDB) API |
-| **Package Managers** | `pnpm@10.11.1` (Pages frontend & Worker backend) |
-| **Linting & Formatting** | Oxlint, Prettier |
+| Layer                    | Technologies                                              |
+| ------------------------ | --------------------------------------------------------- |
+| **Frontend Framework**   | React 19, TypeScript, Vite 8                              |
+| **Styling & Icons**      | Tailwind CSS v4, Lucide React                             |
+| **Video Engine**         | HLS.js, HTML5 Video API                                   |
+| **Edge Hosting**         | Cloudflare Pages, Cloudflare Pages Functions              |
+| **Backend & Scraping**   | Cloudflare Workers (`workerd`), `@vyla-entertainment/sdk` |
+| **Metadata Provider**    | The Movie Database (TMDB) API                             |
+| **Package Managers**     | `pnpm@10.11.1` (Pages frontend & Worker backend)          |
+| **Linting & Formatting** | Oxlint, Prettier                                          |
 
 ---
 
@@ -165,38 +170,47 @@ vplay/
 ## Local Development Setup
 
 ### Prerequisites
+
 - **Node.js**: `v20.x` or higher (`v24.x` recommended)
 - **pnpm**: `v10.11.1` (or modern `v10.x` matching Cloudflare build environment)
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/carlodandan/vplay.git
 cd vplay
 ```
 
 ### 2. Setup the Worker Backend
+
 The worker runs locally on port `8787` using `pnpm`:
+
 ```bash
 cd worker
 pnpm install
 pnpm dev
 ```
-*The worker starts at `http://127.0.0.1:8787`.*
+
+_The worker starts at `http://127.0.0.1:8787`._
 
 ### 3. Setup the Frontend
+
 In a separate terminal, install dependencies and start the Vite development server using `pnpm`:
+
 ```bash
 # Return to root directory
 pnpm install
 pnpm dev
 ```
-*The application will open at `http://localhost:5173` and automatically proxy streaming queries to the local worker on port `8787`.*
+
+_The application will open at `http://localhost:5173` and automatically proxy streaming queries to the local worker on port `8787`._
 
 ---
 
 ## Production Deployment
 
 ### 1. Deploy the Private Cloudflare Worker
+
 ```bash
 cd worker
 pnpm install
@@ -209,7 +223,9 @@ pnpm run deploy
 ```
 
 ### 2. Deploy Cloudflare Pages
+
 The root `wrangler.toml` binds directly to `vplay-api`:
+
 ```toml
 name = "vplay"
 pages_build_output_dir = "dist"
@@ -222,6 +238,7 @@ service = "vplay-api"
 ```
 
 Build the production bundle and deploy:
+
 ```bash
 # Build the production client
 pnpm run build
@@ -231,6 +248,7 @@ npx wrangler pages deploy dist
 ```
 
 Alternatively, link your GitHub repository to Cloudflare Pages with:
+
 - **Build command**: `pnpm run build`
 - **Build output directory**: `dist`
 - **Root directory**: `/`
@@ -243,9 +261,10 @@ Alternatively, link your GitHub repository to Cloudflare Pages with:
 ## API & Architectural Documentation
 
 For deep technical breakdowns:
-* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: C4 diagrams, sequence diagrams, edge caching tiers, and failover design.
-* **[docs/API.md](docs/API.md)**: Full REST & Server-Sent Events (SSE) API specification, parameters, and status codes.
-* **[worker/README.md](worker/README.md)**: Cloudflare Worker internal setup, runtime patches, and scraper configurations.
+
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: C4 diagrams, sequence diagrams, edge caching tiers, and failover design.
+- **[docs/API.md](docs/API.md)**: Full REST & Server-Sent Events (SSE) API specification, parameters, and status codes.
+- **[worker/README.md](worker/README.md)**: Cloudflare Worker internal setup, runtime patches, and scraper configurations.
 
 ---
 
@@ -273,4 +292,4 @@ pnpm run build
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-*VPlay is an independent software project and is not affiliated with, endorsed by, or associated with TMDB, Netflix, or any third-party streaming providers.*
+_VPlay is an independent software project and is not affiliated with, endorsed by, or associated with TMDB, Netflix, or any third-party streaming providers._
