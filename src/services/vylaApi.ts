@@ -95,8 +95,7 @@ export async function streamMediaSources({
 }): Promise<void> {
   const base = API_BASE_URL;
   const isTv =
-    mediaType === "tv" ||
-    (season !== undefined && episode !== undefined);
+    mediaType === "tv" || (season !== undefined && episode !== undefined);
 
   const s = season ?? 1;
   const e = episode ?? 1;
@@ -236,9 +235,7 @@ export async function fetchExtraSubtitles(
   const base = API_BASE_URL;
   const token = await getSessionToken().catch(() => null);
 
-  const isTv =
-    type === "tv" ||
-    (season !== undefined && episode !== undefined);
+  const isTv = type === "tv" || (season !== undefined && episode !== undefined);
   const s = season ?? 1;
   const e = episode ?? 1;
 

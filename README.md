@@ -1,4 +1,4 @@
-# V-Play — Modern Edge-Powered Streaming Platform
+# Vi-Play — Modern Edge-Powered Streaming Platform
 
 <div align="center">
 
@@ -18,7 +18,7 @@
 
 > [!IMPORTANT]
 > **Educational & Entertainment Disclaimer**:  
-> V-Play is an experimental, open-source media player interface created strictly for **educational and research purposes**. V-Play does not host, upload, scrape, store, or distribute any video files, streams, or media on its own servers. All content discovery is powered by public APIs (such as TMDB), and stream resolution is performed via third-party external providers.
+> Vi-Play is an experimental, open-source media player interface created strictly for **educational and research purposes**. Vi-Play does not host, upload, scrape, store, or distribute any video files, streams, or media on its own servers. All content discovery is powered by public APIs (such as TMDB), and stream resolution is performed via third-party external providers.
 
 ---
 
@@ -39,7 +39,7 @@
 
 ## Overview
 
-V-Play is engineered as a modern decoupled web application designed for global deployment on Cloudflare's edge network:
+Vi-Play is engineered as a modern decoupled web application designed for global deployment on Cloudflare's edge network:
 
 1. **Frontend**: A sleek, responsive Single Page Application (SPA) hosted on **Cloudflare Pages**, styled in a modern **Cinema Dark / OLED** visual system.
 2. **Private Streaming Worker**: A standalone, self-contained Cloudflare Worker (`vplay-api`) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers without requiring an external VPS or Node.js server.
@@ -227,7 +227,7 @@ pnpm run deploy
 The root `wrangler.toml` binds directly to `vplay-api`:
 
 ```toml
-name = "vplay"
+name = "vi-play"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
@@ -292,4 +292,4 @@ pnpm run build
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-_VPlay is an independent software project and is not affiliated with, endorsed by, or associated with TMDB, Netflix, or any third-party streaming providers._
+_Vi-Play is an independent software project and is not affiliated with, endorsed by, or associated with TMDB, Netflix, or any third-party streaming providers._

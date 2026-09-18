@@ -1,5 +1,5 @@
 /**
- * VPlay Cloudflare Worker - Self-Contained Vyla Streaming Backend
+ * Vi-Play Cloudflare Worker - Self-Contained Vyla Streaming Backend
  *
  * Runs the Vyla multi-provider streaming scrapers, subtitle aggregator,
  * and HLS/MP4 proxy directly inside the Cloudflare Worker runtime.
@@ -362,7 +362,7 @@ export default {
       const sources = sdk.getSources(true);
       return addCorsHeaders(
         Response.json({
-          name: "V-Play Vyla Gateway",
+          name: "Vi-Play Vyla Gateway",
           status: "online",
           mode: "self-contained",
           providersCount: sources.length,

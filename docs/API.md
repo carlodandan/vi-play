@@ -1,6 +1,6 @@
-# VPlay API Specification
+# Vi-Play API Specification
 
-This document provides complete documentation for the VPlay backend gateway endpoints hosted by the Cloudflare Worker and routed through Cloudflare Pages Functions.
+This document provides complete documentation for the Vi-Play backend gateway endpoints hosted by the Cloudflare Worker and routed through Cloudflare Pages Functions.
 
 ---
 
@@ -266,7 +266,7 @@ Retry-After: 30
 
 ## 7. Client-Side SPA Routes & Deep Links
 
-VPlay integrates `react-router-dom` with synchronized URL paths and bookmarkable deep links:
+Vi-Play integrates `react-router-dom` with synchronized URL paths and bookmarkable deep links:
 
 | Path Pattern | View | Behavior |
 |---|---|---|
