@@ -4,7 +4,7 @@ const BASE_URL = "https://vi-play.pages.dev";
 const DEFAULT_TITLE = "Vi-Play — Stream Movies, TV Shows & Anime in HD";
 const DEFAULT_DESC =
   "Vi-Play is a modern edge-powered media streaming platform for Movies, TV Shows, and Anime. Stream in high definition with adaptive bitrate and multi-language subtitles.";
-const DEFAULT_IMAGE = `${BASE_URL}/favicon.ico`;
+const DEFAULT_IMAGE = `${BASE_URL}/icons/android-icon-192x192.png`;
 
 export interface SEOOptions {
   title?: string;
