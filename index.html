@@ -2,16 +2,122 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#090a0f" />
     <meta
-      name="description"
-      content="Vi-Play - Stream Movies, TV Shows, and Anime in high definition."
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
     />
-    <title>Vi-Play - Streaming Movies, TV Shows & Anime</title>
+
+    <!-- Indexation and Discovery -->
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta
+      name="googlebot"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <link
+      rel="canonical"
+      id="canonical-url"
+      href="https://vi-play.pages.dev/"
+    />
+
+    <!-- Titles & Description -->
+    <title id="meta-page-title">
+      Vi-Play — Stream Movies, TV Shows & Anime in HD
+    </title>
+    <meta
+      name="description"
+      id="meta-description"
+      content="Vi-Play is a modern edge-powered media streaming platform for Movies, TV Shows, and Anime. Stream in high definition with adaptive bitrate and multi-language subtitles."
+    />
+
+    <!-- Preconnect to TMDB image edge and Fonts for Core Web Vitals (LCP) -->
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+    <link rel="dns-prefetch" href="https://image.tmdb.org" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- OpenGraph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Vi-Play" />
+    <meta
+      property="og:title"
+      id="og-title"
+      content="Vi-Play — Stream Movies, TV Shows & Anime in HD"
+    />
+    <meta
+      property="og:description"
+      id="og-desc"
+      content="Watch high-definition movies, TV shows, and anime with real-time stream aggregation, multi-language subtitles, and adaptive bitrate playback."
+    />
+    <meta property="og:url" id="og-url" content="https://vi-play.pages.dev/" />
+    <meta
+      property="og:image"
+      id="og-image"
+      content="https://vi-play.pages.dev/favicon.ico"
+    />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      id="twitter-title"
+      content="Vi-Play — Stream Movies, TV Shows & Anime in HD"
+    />
+    <meta
+      name="twitter:description"
+      id="twitter-desc"
+      content="Watch high-definition movies, TV shows, and anime with real-time stream aggregation, multi-language subtitles, and adaptive bitrate playback."
+    />
+    <meta
+      name="twitter:image"
+      id="twitter-image"
+      content="https://vi-play.pages.dev/favicon.ico"
+    />
+
+    <!-- Structured Data (JSON-LD) Site-wide Schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://vi-play.pages.dev/#website",
+            "url": "https://vi-play.pages.dev/",
+            "name": "Vi-Play",
+            "description": "Stream Movies, TV Shows, and Anime in high definition.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://vi-play.pages.dev/?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://vi-play.pages.dev/#webapp",
+            "name": "Vi-Play",
+            "url": "https://vi-play.pages.dev/",
+            "applicationCategory": "EntertainmentApplication",
+            "operatingSystem": "All",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        ]
+      }
+    </script>
+    <script type="application/ld+json" id="dynamic-seo-schema"></script>
   </head>
-  <body class="bg-[#090a0f] text-zinc-100">
+  <body class="bg-[#090a0f] text-zinc-100 overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

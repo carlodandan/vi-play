@@ -11,32 +11,37 @@ export default defineConfig({
     tailwindcss(),
     babel({ presets: [reactCompilerPreset()] }),
     Sitemap({
-			hostname: 'https://vi-play.pages.dev',
-
-			dynamicRoutes: [
-				'/browse',
-				'/rankings',
-				'/search',
-				'/library',
-			],
-
-			priority: {
-				'/browse': 0.8,
-				'/rankings': 0.7,
-				'/search': 0.6,
-				'/library': 0.5,
-			},
-
-			readable: true,
-
-			robots: [
-				{
-					userAgent: '*',
-					allow: '/',
-					crawlDelay: 2,
-				},
-			],
-		})
+      hostname: 'https://vi-play.pages.dev',
+      dynamicRoutes: [
+        '/',
+        '/movies',
+        '/tv',
+        '/anime',
+        '/watchlist',
+      ],
+      priority: {
+        '/': 1.0,
+        '/movies': 0.9,
+        '/tv': 0.9,
+        '/anime': 0.9,
+        '/watchlist': 0.5,
+      },
+      changefreq: {
+        '/': 'daily',
+        '/movies': 'daily',
+        '/tv': 'daily',
+        '/anime': 'daily',
+        '/watchlist': 'weekly',
+      },
+      readable: true,
+      robots: [
+        {
+          userAgent: '*',
+          allow: '/',
+          disallow: ['/api/', '/healthz'],
+        },
+      ],
+    }),
   ],
   server: {
     port: 5173,

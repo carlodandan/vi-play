@@ -43,24 +43,164 @@ export const Footer: React.FC = () => {
           </p>
         </div>
 
+        {/* Internal Link Columns for Crawlers & Navigation */}
+        <div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-6 py-6 text-xs"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          <div>
+            <h3 className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px] mb-3">
+              Explore Catalog
+            </h3>
+            <ul className="space-y-2 text-zinc-400">
+              <li>
+                <a href="/" className="hover:text-white transition-colors">
+                  Home Catalog
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/movies"
+                  className="hover:text-white transition-colors"
+                >
+                  HD Movies
+                </a>
+              </li>
+              <li>
+                <a href="/tv" className="hover:text-white transition-colors">
+                  TV Series
+                </a>
+              </li>
+              <li>
+                <a href="/anime" className="hover:text-white transition-colors">
+                  Anime Series & Films
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/watchlist"
+                  className="hover:text-white transition-colors"
+                >
+                  Personal Watchlist
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px] mb-3">
+              Popular Genres
+            </h3>
+            <ul className="space-y-2 text-zinc-400">
+              <li>
+                <a
+                  href="/movies"
+                  className="hover:text-white transition-colors"
+                >
+                  Action & Adventure
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/movies"
+                  className="hover:text-white transition-colors"
+                >
+                  Sci-Fi & Fantasy
+                </a>
+              </li>
+              <li>
+                <a href="/tv" className="hover:text-white transition-colors">
+                  Drama & Crime
+                </a>
+              </li>
+              <li>
+                <a href="/anime" className="hover:text-white transition-colors">
+                  Shonen & Japanese Animation
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px] mb-3">
+              Platform & AI Index
+            </h3>
+            <ul className="space-y-2 text-zinc-400">
+              <li>
+                <a
+                  href="/llms.txt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  llms.txt (AI Search)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/llms-full.txt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  llms-full.txt
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/sitemap.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Sitemap XML
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/robots.txt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Robots TXT
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px] mb-3">
+              Edge Infrastructure
+            </h3>
+            <ul className="space-y-2 text-zinc-400">
+              <li>Cloudflare Pages Edge</li>
+              <li>Serverless Worker Gateway</li>
+              <li>HLS.js Adaptive Streaming</li>
+              <li>Multi-Provider Scrapers</li>
+            </ul>
+          </div>
+        </div>
+
         {/* Brand row */}
         <div
           className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4"
           style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
         >
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
+            <a
+              href="/"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-white no-underline"
               style={{ background: "var(--color-accent)" }}
             >
               <Play
                 className="w-3.5 h-3.5 fill-current ml-0.5"
                 aria-hidden="true"
               />
-            </div>
-            <span className="font-bold text-white text-base">
+            </a>
+            <a href="/" className="font-bold text-white text-base no-underline">
               Vi-<span style={{ color: "var(--color-accent)" }}>Play</span>
-            </span>
+            </a>
             <span className="text-zinc-700">|</span>
             <span className="text-zinc-500">Movies · TV Shows · Anime</span>
           </div>

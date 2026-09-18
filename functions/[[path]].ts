@@ -16,6 +16,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
 
+  // Enforce HTTPS in production
+  if (url.protocol === 'http:' && !url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1')) {
+    url.protocol = 'https:';
+    return Response.redirect(url.toString(), 301);
+  }
+
   const isHtmlRequest = request.headers.get('accept')?.includes('text/html');
 
   // Streaming API routes (SSE / JSON / Proxies)

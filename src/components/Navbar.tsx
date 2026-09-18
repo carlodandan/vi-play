@@ -34,19 +34,37 @@ export const Navbar: React.FC<NavbarProps> = ({
   const categories: {
     id: NavCategory;
     label: string;
+    href: string;
     icon: React.ReactNode;
   }[] = [
     {
       id: "all",
       label: "Home",
+      href: "/",
       icon: <Play className="w-3.5 h-3.5 fill-current" />,
     },
-    { id: "movie", label: "Movies", icon: <Film className="w-3.5 h-3.5" /> },
-    { id: "tv", label: "TV Shows", icon: <Tv className="w-3.5 h-3.5" /> },
-    { id: "anime", label: "Anime", icon: <Sparkles className="w-3.5 h-3.5" /> },
+    {
+      id: "movie",
+      label: "Movies",
+      href: "/movies",
+      icon: <Film className="w-3.5 h-3.5" />,
+    },
+    {
+      id: "tv",
+      label: "TV Shows",
+      href: "/tv",
+      icon: <Tv className="w-3.5 h-3.5" />,
+    },
+    {
+      id: "anime",
+      label: "Anime",
+      href: "/anime",
+      icon: <Sparkles className="w-3.5 h-3.5" />,
+    },
     {
       id: "watchlist",
       label: `Watchlist${watchlistCount > 0 ? ` (${watchlistCount})` : ""}`,
+      href: "/watchlist",
       icon: <Bookmark className="w-3.5 h-3.5" />,
     },
   ];
@@ -65,12 +83,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center gap-6">
-            <button
-              onClick={() => {
-                onSelectCategory("all");
-                onSearchChange("");
+            <a
+              href="/"
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                  e.preventDefault();
+                  onSelectCategory("all");
+                  onSearchChange("");
+                }
               }}
-              className="flex items-center gap-2.5 group cursor-pointer"
+              className="flex items-center gap-2.5 group cursor-pointer no-underline text-inherit"
             >
               {/* Cinematic V mark — red square with play triangle */}
               <div
@@ -85,7 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-xl font-black tracking-tight text-white">
                 Vi-<span style={{ color: "var(--color-accent)" }}>Play</span>
               </span>
-            </button>
+            </a>
 
             {/* Desktop Category Navigation */}
             <nav
@@ -95,13 +117,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               {categories.map((cat) => {
                 const active = currentCategory === cat.id && !searchQuery;
                 return (
-                  <button
+                  <a
                     key={cat.id}
-                    onClick={() => {
-                      onSelectCategory(cat.id);
-                      onSearchChange("");
+                    href={cat.href}
+                    onClick={(e) => {
+                      if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                        e.preventDefault();
+                        onSelectCategory(cat.id);
+                        onSearchChange("");
+                      }
                     }}
-                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
+                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer no-underline ${
                       active
                         ? "text-white"
                         : "text-zinc-400 hover:text-zinc-100"
@@ -117,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                     {cat.icon}
                     {cat.label}
-                  </button>
+                  </a>
                 );
               })}
             </nav>
@@ -127,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-3">
             {/* Search */}
             <div
-              className={`relative transition-all duration-300 ${searchFocused ? "w-56 sm:w-72" : "w-40 sm:w-56"}`}
+              className={`relative transition-all duration-300 ${searchFocused ? "w-44 min-[400px]:w-56 sm:w-72" : "w-32 min-[400px]:w-44 sm:w-56"}`}
             >
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
               <input
@@ -189,14 +215,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           {categories.map((cat) => {
             const active = currentCategory === cat.id && !searchQuery;
             return (
-              <button
+              <a
                 key={cat.id}
-                onClick={() => {
-                  onSelectCategory(cat.id);
-                  onSearchChange("");
-                  setMobileMenuOpen(false);
+                href={cat.href}
+                onClick={(e) => {
+                  if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                    e.preventDefault();
+                    onSelectCategory(cat.id);
+                    onSearchChange("");
+                    setMobileMenuOpen(false);
+                  }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer no-underline ${
                   active ? "text-white" : "text-zinc-400 hover:text-white"
                 }`}
                 style={
@@ -210,7 +240,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {cat.icon}
                 {cat.label}
-              </button>
+              </a>
             );
           })}
         </div>

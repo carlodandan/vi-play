@@ -11,7 +11,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5200bm.jpg",
+      "https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s5200bm.jpg",
     vote_average: 8.2,
     vote_count: 5300,
     release_date: "2024-02-27",
@@ -29,7 +29,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/rAiYTsqJiOamC00jz9v7Zq6KqVb.jpg",
+      "https://image.tmdb.org/t/p/w1280/rAiYTsqJiOamC00jz9v7Zq6KqVb.jpg",
     vote_average: 8.4,
     vote_count: 36000,
     release_date: "2014-11-05",
@@ -48,7 +48,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
+      "https://image.tmdb.org/t/p/w1280/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
     vote_average: 8.7,
     vote_count: 6200,
     release_date: "2013-04-07",
@@ -168,7 +168,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/xUfRZu2mi8jH6SzQEJGP6tjBuYj.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/3GQKYh6Trm8pxd2AypovoYQf4Ay.jpg",
+      "https://image.tmdb.org/t/p/w1280/3GQKYh6Trm8pxd2AypovoYQf4Ay.jpg",
     vote_average: 8.6,
     vote_count: 6500,
     release_date: "2019-04-06",
@@ -238,7 +238,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/6qQzMJG27XOJsyAEEIisoJB45j2.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/qpin8cASXEVtwhzNsprHYFiOAGk.jpg",
+      "https://image.tmdb.org/t/p/w1280/qpin8cASXEVtwhzNsprHYFiOAGk.jpg",
     vote_average: 8.6,
     vote_count: 3800,
     release_date: "2020-10-03",
@@ -301,7 +301,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/dqZENchTd7lp5zht7BdlqM7RBhD.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/rBOnrVlck7BIlGeWVlzYiZeg4l2.jpg",
+      "https://image.tmdb.org/t/p/w1280/rBOnrVlck7BIlGeWVlzYiZeg4l2.jpg",
     vote_average: 8.5,
     vote_count: 1200,
     release_date: "2024-01-07",
@@ -342,7 +342,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/9faGSFi5jam6pDWGNd0p8J2vPtL.jpg",
+      "https://image.tmdb.org/t/p/w1280/9faGSFi5jam6pDWGNd0p8J2vPtL.jpg",
     vote_average: 8.9,
     vote_count: 14200,
     release_date: "2008-01-20",
@@ -431,7 +431,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg",
+      "https://image.tmdb.org/t/p/w1280/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg",
     vote_average: 8.4,
     vote_count: 23500,
     release_date: "2011-04-17",
@@ -480,7 +480,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg",
+      "https://image.tmdb.org/t/p/w1280/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg",
     vote_average: 8.8,
     vote_count: 4200,
     release_date: "2021-11-06",
@@ -529,7 +529,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg",
+      "https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg",
     vote_average: 8.4,
     vote_count: 37000,
     release_date: "2010-07-15",
@@ -547,7 +547,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
+      "https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
     vote_average: 8.4,
     vote_count: 28000,
     release_date: "1999-10-15",
@@ -565,7 +565,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg",
+      "https://image.tmdb.org/t/p/w1280/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg",
     vote_average: 8.5,
     vote_count: 32500,
     release_date: "2008-07-16",
@@ -583,7 +583,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/7d6wo0jw5L4q9vh6t8w3bE761u.jpg",
+      "https://image.tmdb.org/t/p/w1280/7d6wo0jw5L4q9vh6t8w3bE761u.jpg",
     vote_average: 8.4,
     vote_count: 15400,
     release_date: "2018-12-06",
@@ -602,7 +602,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/mSDsSDwaP3E7dEfUPWy4J0djt4O.jpg",
+      "https://image.tmdb.org/t/p/w1280/mSDsSDwaP3E7dEfUPWy4J0djt4O.jpg",
     vote_average: 8.5,
     vote_count: 16200,
     release_date: "2001-07-20",
@@ -621,7 +621,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/vfJFJPepRKapMd5G2ro7klIRysq.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/mMtUybQ6hL24FXo0F3Z4j2KG7kZ.jpg",
+      "https://image.tmdb.org/t/p/w1280/mMtUybQ6hL24FXo0F3Z4j2KG7kZ.jpg",
     vote_average: 8.5,
     vote_count: 11000,
     release_date: "2016-08-26",
@@ -639,7 +639,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg",
+      "https://image.tmdb.org/t/p/w1280/56v2KjBlU4XaOv9rVYEQypROD7P.jpg",
     vote_average: 8.6,
     vote_count: 17000,
     release_date: "2016-07-15",
@@ -682,7 +682,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     poster_path:
       "https://image.tmdb.org/t/p/w500/dB4EDhre2dsC2kxYDavyKWqLQwi.jpg",
     backdrop_path:
-      "https://image.tmdb.org/t/p/original/2rmK7mnchw9Xr3XdiTFSxTTLXqv.jpg",
+      "https://image.tmdb.org/t/p/w1280/2rmK7mnchw9Xr3XdiTFSxTTLXqv.jpg",
     vote_average: 8.7,
     vote_count: 4500,
     release_date: "1999-10-20",

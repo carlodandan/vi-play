@@ -100,8 +100,11 @@ export const ContinueWatchingRow: React.FC<ContinueWatchingRowProps> = ({
               >
                 <img
                   src={entry.item.backdrop_path || entry.item.poster_path}
-                  alt={entry.item.title}
+                  alt={`Continue watching ${entry.item.title} on Vi-Play`}
                   loading="lazy"
+                  decoding="async"
+                  width={400}
+                  height={225}
                   className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500 ease-out"
                 />
                 <div

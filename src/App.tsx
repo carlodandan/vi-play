@@ -20,6 +20,8 @@ import {
   fetchMediaDetail,
 } from "./services/tmdbApi.ts";
 import { Film, Tv, Sparkles, Bookmark, Flame, Compass } from "lucide-react";
+import { useSEO } from "./hooks/useSEO.ts";
+import { buildMediaPath, buildWatchPath } from "./utils/slug.ts";
 
 interface ActivePlayerState {
   item: MediaItem;
@@ -236,9 +238,9 @@ export function App() {
   useEffect(() => {
     const path = location.pathname;
 
-    // 1. Watch route: /watch/:type/:id/:season?/:episode?
+    // 1. Watch route: /watch/:type/:id/:season?/:episode?/:slug?
     const watchMatch = path.match(
-      /^\/watch\/(movie|tv|anime)\/(\d+)(?:\/(\d+)\/(\d+))?$/,
+      /^\/watch\/(movie|tv|anime)\/(\d+)(?:\/(\d+)\/(\d+))?(?:\/([a-z0-9-]+))?$/,
     );
     if (watchMatch) {
       const type = watchMatch[1] as "movie" | "tv" | "anime";
@@ -296,8 +298,10 @@ export function App() {
       return;
     }
 
-    // 2. Detail route: /:type/:id
-    const detailMatch = path.match(/^\/(movie|tv|anime)\/(\d+)$/);
+    // 2. Detail route: /:type/:id/:slug?
+    const detailMatch = path.match(
+      /^\/(movie|tv|anime)\/(\d+)(?:\/([a-z0-9-]+))?$/,
+    );
     if (detailMatch) {
       const type = detailMatch[1] as "movie" | "tv" | "anime";
       const id = Number(detailMatch[2]);
@@ -340,6 +344,122 @@ export function App() {
     }
   }, [location.pathname, findKnownItem]);
 
+  // ── Dynamic SEO & Rich Snippet Injection ──────────────────────────────────
+  const seoConfig = useMemo(() => {
+    if (activePlayer) {
+      const { item, season, episode } = activePlayer;
+      const releaseYear = item.release_date?.slice(0, 4) || item.year;
+      const episodeTag =
+        season && episode ? ` (Season ${season}, Episode ${episode})` : "";
+      return {
+        title: `Streaming ${item.title}${episodeTag}`,
+        description: `Watch ${item.title}${releaseYear ? ` (${releaseYear})` : ""} online in full HD on Vi-Play. Adaptive bitrate streaming and multi-language subtitles.`,
+        canonicalPath: buildWatchPath(
+          item.type,
+          item.id,
+          season,
+          episode,
+          item.title,
+        ),
+        ogImage: item.backdrop_path || item.poster_path,
+        ogType: (item.type === "movie"
+          ? "video.movie"
+          : "video.tv_show") as any,
+        schema: {
+          "@context": "https://schema.org",
+          "@type": item.type === "movie" ? "Movie" : "TVSeries",
+          name: item.title,
+          description: item.overview,
+          image: item.poster_path || item.backdrop_path,
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: item.vote_average,
+            bestRating: "10",
+            ratingCount: item.vote_count || 100,
+          },
+        },
+      };
+    }
+
+    if (detailModalItem) {
+      const item = detailModalItem;
+      const releaseYear = item.release_date?.slice(0, 4) || item.year;
+      return {
+        title: `Watch ${item.title}${releaseYear ? ` (${releaseYear})` : ""} Online in HD`,
+        description:
+          item.overview ||
+          `Stream ${item.title} online with Vi-Play. High definition playback with adaptive bitrate and subtitles.`,
+        canonicalPath: buildMediaPath(item.type, item.id, item.title),
+        ogImage: item.poster_path || item.backdrop_path,
+        ogType: (item.type === "movie"
+          ? "video.movie"
+          : "video.tv_show") as any,
+        schema: {
+          "@context": "https://schema.org",
+          "@type": item.type === "movie" ? "Movie" : "TVSeries",
+          name: item.title,
+          description: item.overview,
+          image: item.poster_path || item.backdrop_path,
+          datePublished: item.release_date,
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: item.vote_average,
+            bestRating: "10",
+            ratingCount: item.vote_count || 100,
+          },
+        },
+      };
+    }
+
+    if (searchQuery.trim()) {
+      return {
+        title: `Search: "${searchQuery}"`,
+        description: `Search results for "${searchQuery}" on Vi-Play streaming platform.`,
+        canonicalPath: `/?search=${encodeURIComponent(searchQuery.trim())}`,
+      };
+    }
+
+    switch (currentCategory) {
+      case "movie":
+        return {
+          title: "Watch Free Movies Online in HD",
+          description:
+            "Explore top-rated and trending movies on Vi-Play. Stream in 1080p and 4K with adaptive bitrate and multi-language subtitles.",
+          canonicalPath: "/movies",
+        };
+      case "tv":
+        return {
+          title: "Watch TV Shows & Series Online in HD",
+          description:
+            "Binge full seasons and trending episodes of your favorite television series on Vi-Play.",
+          canonicalPath: "/tv",
+        };
+      case "anime":
+        return {
+          title: "Watch Anime Series & Movies Online in HD",
+          description:
+            "Stream popular Japanese anime series and feature films with original audio and multi-language subtitles on Vi-Play.",
+          canonicalPath: "/anime",
+        };
+      case "watchlist":
+        return {
+          title: "My Saved Watchlist",
+          description:
+            "Access your personal bookmarked collection of movies, television series, and anime on Vi-Play.",
+          canonicalPath: "/watchlist",
+        };
+      default:
+        return {
+          title: "Vi-Play — Stream Movies, TV Shows & Anime in HD",
+          description:
+            "Vi-Play is a modern edge-powered media streaming platform for Movies, TV Shows, and Anime. Stream in high definition with adaptive bitrate and multi-language subtitles.",
+          canonicalPath: "/",
+        };
+    }
+  }, [activePlayer, detailModalItem, searchQuery, currentCategory]);
+
+  useSEO(seoConfig);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleToggleWatchlist = (id: number, item?: MediaItem) => {
     toggleWatchlist(id, item);
@@ -356,7 +476,7 @@ export function App() {
   const handleOpenDetails = (item: MediaItem) => {
     const type =
       item.type === "movie" ? "movie" : item.type === "anime" ? "anime" : "tv";
-    navigate(`/${type}/${item.id}`);
+    navigate(buildMediaPath(type, item.id, item.title));
   };
 
   const handlePlayMedia = (
@@ -373,11 +493,7 @@ export function App() {
     const e = isSeries ? (episode ?? 1) : undefined;
     saveWatchHistory(item, s, e);
     setDetailModalItem(null);
-    if (isSeries) {
-      navigate(`/watch/${item.type}/${item.id}/${s}/${e}`);
-    } else {
-      navigate(`/watch/${item.type}/${item.id}`);
-    }
+    navigate(buildWatchPath(item.type, item.id, s, e, item.title));
   };
 
   const handleNavigateEpisode = (newSeason: number, newEpisode: number) => {

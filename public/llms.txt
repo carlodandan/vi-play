@@ -1,0 +1,28 @@
+# Vi-Play
+
+> Modern edge-powered media streaming platform for Movies, TV Shows, and Anime with real-time Server-Sent Events (SSE) stream discovery and Cinema Dark UI.
+
+Vi-Play is an open-source, experimental web interface deployed globally on Cloudflare Pages and backed by a self-contained Cloudflare Worker executing the `@vyla-entertainment/sdk`. It enables progressive stream discovery across 48+ external video scrapers without requiring a standalone VPS or Node.js server.
+
+## Web Application Routes
+
+- [Home](https://vi-play.pages.dev/): Discover trending movies, popular television shows, and top Japanese anime with an interactive hero carousel and curated shelves.
+- [Movies](https://vi-play.pages.dev/movies): Filter and explore high-definition movies by genre, popularity, and release date.
+- [TV Shows](https://vi-play.pages.dev/tv): Browse television series with full multi-season and episode listings.
+- [Anime](https://vi-play.pages.dev/anime): Stream Japanese animation series and feature films with original audio, English dubs, and multi-language subtitle tracks.
+- [Watchlist](https://vi-play.pages.dev/watchlist): Access bookmarked media titles saved in client-side local storage.
+
+## Core Features & Architecture
+
+- **Adaptive Bitrate Playback**: Powered by HLS.js with automatic resolution scaling (360p up to 4K) and direct MP4 fallback.
+- **Server-Sent Events (SSE)**: Streams progressive source discovery links over `/movie` and `/tv` endpoints, minimizing time-to-first-frame.
+- **Smart Stream Failover**: Automatic switching to secondary verified sources if an active stream server encounters errors or drops.
+- **Subtitles Engine**: Embedded multi-language subtitle track selection with VTT and SRT rendering.
+- **Private Edge Service Binding**: Cloudflare Worker backend is secured with `workers_dev = false` and routed exclusively via internal Cloudflare Pages Service Bindings (`VYLA_WORKER`).
+
+## Full Documentation & Specifications
+
+- [Extended LLM Documentation](https://vi-play.pages.dev/llms-full.txt): Comprehensive context, scraper specifications, and system data flows.
+- [API Specification](https://vi-play.pages.dev/docs/API.md): Detailed REST and SSE endpoint documentation.
+- [System Architecture](https://vi-play.pages.dev/docs/ARCHITECTURE.md): C4 architecture diagrams, sequence flows, and caching tiers.
+- [Backlink & SEO Strategy](https://vi-play.pages.dev/docs/BACKLINK_STRATEGY.md): Search optimization and distribution strategy.

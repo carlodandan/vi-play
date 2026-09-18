@@ -103,9 +103,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           >
             <img
               src={item.backdrop_path || item.poster_path}
-              alt={item.title}
+              alt={`${item.title}${item.release_date ? ` (${item.release_date.slice(0, 4)})` : ""} - Featured on Vi-Play`}
               fetchPriority={index === 0 ? "high" : "low"}
               loading={index === 0 ? "eager" : "lazy"}
+              decoding={index === 0 ? "sync" : "async"}
               className="w-full h-full object-cover object-center"
               style={{ transform: "scale(1.04)" }}
             />
@@ -195,7 +196,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
           {/* Title — Bebas Neue large cinematic */}
           <h1
-            className="font-display text-5xl sm:text-6xl md:text-7xl leading-none tracking-wide text-white drop-shadow-2xl"
+            className="font-display text-4xl sm:text-6xl md:text-7xl leading-none tracking-wide text-white drop-shadow-2xl"
             style={{ textShadow: "0 4px 24px rgba(0,0,0,0.8)" }}
           >
             {currentItem.title}

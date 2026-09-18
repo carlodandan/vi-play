@@ -1,0 +1,39 @@
+# Vi-Play — Complete LLM Context & Specification
+
+> High-performance media streaming platform for Movies, TV Shows, and Anime, built with Cinema Dark UI, real-time Server-Sent Events (SSE) streaming, and an edge-cached Cloudflare Worker backend.
+
+## 1. System Overview
+Vi-Play is architected as a modern, decoupled web application deployed on Cloudflare's global edge network:
+1. **Frontend**: Single Page Application (SPA) built with React 19, Vite 8, and Tailwind CSS v4, deployed to Cloudflare Pages.
+2. **Private Streaming Worker**: Standalone Cloudflare Worker (`vplay-api`) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers without requiring an external VPS or Node.js server.
+3. **Private Service Binding**: The worker is private (`workers_dev = false`) and only reachable through Cloudflare internal Service Bindings (`VYLA_WORKER`).
+
+## 2. URL & Navigation Structure
+- `/`: Homepage featuring Hero Carousel, Continue Watching row, Top 10 This Week, Trending Anime, Top Rated Movies, Popular TV Series, and Sci-Fi & Fantasy rows.
+- `/movies`: Dedicated movie catalog grid with dynamic genre filtering (Action, Comedy, Drama, Sci-Fi, Horror, etc.).
+- `/tv`: Dedicated television series catalog grid with multi-season browsing.
+- `/anime`: Japanese animation grid with both feature films (movies) and episodic series.
+- `/watchlist`: Client-side bookmarked media stored locally.
+- `/:type/:id/:slug?`: Deep link detail modal for any media item (e.g. `/movie/693134/dune-part-two`, `/tv/209867/solo-leveling`).
+- `/watch/:type/:id/:slug?`: Fullscreen video player for movies or series (defaults to S1 E1).
+- `/watch/:type/:id/:season/:episode/:slug?`: Fullscreen video player at specified season and episode.
+
+## 3. Streaming Engine
+- Video streaming is initiated via Server-Sent Events (SSE) against `/movie` or `/tv` endpoints.
+- Scraper providers are polled concurrently, and playable HLS (.m3u8) / MP4 streams are emitted progressively.
+- Playback begins immediately upon receiving the first healthy stream.
+- If an active stream server drops, the player seamlessly falls back to the next verified source without restarting playback or losing the user's progress.
+
+## 4. API Endpoints
+- `POST /api/auth`: Stateless session token generation with HMAC-SHA256 signature.
+- `GET /api/trending?type=all|movie|tv|anime&page=1`: Trending media discovery proxying TMDB with edge caching.
+- `GET /api/popular?type=all|movie|tv|anime&page=1`: Popular media discovery.
+- `GET /api/search?query=...&page=1`: Multi-search query across TMDB database.
+- `GET /api/details?id=...&type=movie|tv|anime`: Deep media details, synopsis, credits, and episode lists.
+- `GET /movie?id=...`: Real-time SSE stream provider for feature films.
+- `GET /tv?id=...&season=...&episode=...`: Real-time SSE stream provider for television episodes.
+- `GET /api/subtitles?id=...&type=...`: Subtitle aggregator endpoint.
+- `GET /api?url=...`: Secure CORS-stripping streaming proxy.
+
+## 5. Security & Legal Notice
+Vi-Play is an open-source demonstration application built exclusively for entertainment and educational purposes. Vi-Play does not host, stream, scrape, upload, or store media files on its servers. All metadata is retrieved from public APIs (such as TMDB) and streams are resolved via third-party external providers via self-hosted Vyla gateways.

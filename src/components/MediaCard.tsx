@@ -1,57 +1,77 @@
-import { Play, Bookmark, Star, Check } from "lucide-react";
+import { Star, Play, Bookmark, Check } from "lucide-react";
 import type { MediaItem } from "../types/media.ts";
+import { buildMediaPath } from "../utils/slug.ts";
 
 interface MediaCardProps {
   item: MediaItem;
-  onPlay: (item: MediaItem) => void;
   onClick: (item: MediaItem) => void;
+  onPlay: (item: MediaItem) => void;
   isWatchlisted: boolean;
   onToggleWatchlist: (id: number, item?: MediaItem) => void;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({
   item,
-  onPlay,
   onClick,
+  onPlay,
   isWatchlisted,
   onToggleWatchlist,
 }) => {
   const typeBadgeStyle =
     item.type === "anime"
-      ? { background: "rgba(225,29,72,0.85)", color: "#fff" }
+      ? {
+          background: "rgba(168,85,247,0.20)",
+          color: "#d8b4fe",
+          border: "1px solid rgba(168,85,247,0.30)",
+        }
       : item.type === "tv"
-        ? { background: "rgba(79,70,229,0.85)", color: "#fff" }
+        ? {
+            background: "rgba(6,182,212,0.20)",
+            color: "#67e8f9",
+            border: "1px solid rgba(6,182,212,0.30)",
+          }
         : {
-            background: "rgba(255,255,255,0.12)",
-            color: "#f1f5f9",
-            backdropFilter: "blur(4px)",
+            background: "rgba(225,29,72,0.20)",
+            color: "#fda4af",
+            border: "1px solid rgba(225,29,72,0.30)",
           };
 
   const typeName =
     item.type === "anime" ? "Anime" : item.type === "tv" ? "Series" : "Movie";
+  const mediaHref = buildMediaPath(item.type, item.id, item.title);
+  const releaseYear = item.release_date?.slice(0, 4) || item.year || "";
+  const altText = `${item.title}${releaseYear ? ` (${releaseYear})` : ""} - Watch ${typeName} on Vi-Play`;
 
   return (
-    <div
-      onClick={() => onClick(item)}
-      className="group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300"
+    <a
+      href={mediaHref}
+      onClick={(e) => {
+        // Allow ctrl/cmd click to open in new tab
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+          e.preventDefault();
+          onClick(item);
+        }
+      }}
+      className="group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 no-underline text-inherit"
       style={{
         background: "var(--color-surface)",
         border: "1px solid rgba(255,255,255,0.05)",
         transform: "translateY(0)",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform =
+        (e.currentTarget as HTMLAnchorElement).style.transform =
           "translateY(-4px)";
-        (e.currentTarget as HTMLDivElement).style.borderColor =
+        (e.currentTarget as HTMLAnchorElement).style.borderColor =
           "var(--color-accent)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow =
+        (e.currentTarget as HTMLAnchorElement).style.boxShadow =
           "0 8px 32px var(--color-accent-glow)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-        (e.currentTarget as HTMLDivElement).style.borderColor =
+        (e.currentTarget as HTMLAnchorElement).style.transform =
+          "translateY(0)";
+        (e.currentTarget as HTMLAnchorElement).style.borderColor =
           "rgba(255,255,255,0.05)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
       }}
     >
       {/* Poster */}
@@ -61,8 +81,11 @@ export const MediaCard: React.FC<MediaCardProps> = ({
       >
         <img
           src={item.poster_path}
-          alt={item.title}
+          alt={altText}
           loading="lazy"
+          decoding="async"
+          width={342}
+          height={513}
           className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
         />
 
@@ -173,6 +196,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </a>
   );
 };

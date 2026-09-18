@@ -63,8 +63,12 @@ export const MediaModal: React.FC<MediaModalProps> = ({
           {/* Header Backdrop */}
           <div className="relative h-64 sm:h-80 w-full overflow-hidden bg-zinc-900">
             <img
-              src={item.backdrop_path}
-              alt={item.title}
+              src={item.backdrop_path || item.poster_path}
+              alt={`Backdrop for ${item.title} streaming on Vi-Play`}
+              loading="eager"
+              decoding="async"
+              width={1280}
+              height={720}
               className="w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
@@ -86,9 +90,9 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                     {item.vote_average.toFixed(1)}
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
                   {item.title}
-                </h2>
+                </h1>
                 {item.tagline && (
                   <p className="text-xs sm:text-sm text-purple-300/80 italic line-clamp-1">
                     "{item.tagline}"
@@ -158,9 +162,9 @@ export const MediaModal: React.FC<MediaModalProps> = ({
 
             {/* Overview / Synopsis */}
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
+              <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
                 Overview
-              </h3>
+              </h2>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
                 {item.overview}
               </p>
@@ -170,14 +174,14 @@ export const MediaModal: React.FC<MediaModalProps> = ({
             {isSeries && seasons.length > 0 && (
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+                  <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
                     {item.type === "anime" ? (
                       <Sparkles className="w-4 h-4 text-rose-400" />
                     ) : (
                       <Tv className="w-4 h-4 text-indigo-400" />
                     )}
                     Episodes & Seasons
-                  </h3>
+                  </h2>
                 </div>
 
                 {/* Season Tabs */}
@@ -220,9 +224,9 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                           <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-white truncate">
+                          <h3 className="text-sm font-semibold text-zinc-200 group-hover:text-white truncate">
                             EP {ep.episode_number}: {ep.name}
-                          </h4>
+                          </h3>
                           {ep.overview && (
                             <p className="text-xs text-zinc-400 truncate max-w-xl">
                               {ep.overview}

@@ -27,6 +27,8 @@ export interface MediaItem {
   vote_average: number;
   vote_count?: number;
   release_date: string;
+  first_air_date?: string;
+  year?: number | string;
   genres: string[];
   seasons_count?: number;
   seasons?: Season[];

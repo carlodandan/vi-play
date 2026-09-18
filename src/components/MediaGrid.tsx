@@ -25,7 +25,8 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
   genres = [],
   selectedGenre = "All",
   onSelectGenre,
-}) => {
+  isPageHeading = true,
+}: MediaGridProps & { isPageHeading?: boolean }) => {
   return (
     <section className="mb-12 animate-slideUp">
       {/* Header */}
@@ -36,9 +37,15 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
             style={{ background: "var(--color-accent)" }}
           />
           {icon && <div className="text-zinc-400">{icon}</div>}
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            {title}
-          </h2>
+          {isPageHeading ? (
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              {title}
+            </h1>
+          ) : (
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              {title}
+            </h2>
+          )}
           <span
             className="text-xs font-semibold px-2 py-0.5 rounded-full text-zinc-500"
             style={{
