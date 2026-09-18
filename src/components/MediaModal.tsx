@@ -30,7 +30,11 @@ export const MediaModal: React.FC<MediaModalProps> = ({
 
   if (!item) return null;
 
-  const isSeries = item.type === "tv" || item.type === "anime";
+  const isSeries =
+    item.media_type === "tv" ||
+    item.type === "tv" ||
+    Boolean(item.seasons && item.seasons.length > 0) ||
+    Boolean(item.seasons_count && item.seasons_count > 0);
   const seasons: Season[] = item.seasons || [];
   const currentSeason =
     seasons.find((s) => s.season_number === selectedSeasonNumber) || seasons[0];
@@ -71,7 +75,11 @@ export const MediaModal: React.FC<MediaModalProps> = ({
               <div className="space-y-1.5 max-w-xl">
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-600/30 text-purple-300 border border-purple-500/40">
-                    {item.type}
+                    {item.type === "anime"
+                      ? item.media_type === "movie"
+                        ? "Anime Movie"
+                        : "Anime Series"
+                      : item.type}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-amber-400 font-semibold">
                     <Star className="w-3.5 h-3.5 fill-amber-400" />
@@ -103,6 +111,8 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                         currentSeason.season_number,
                         currentSeason.episodes[0].episode_number,
                       );
+                    } else if (isSeries) {
+                      onPlay(item, 1, 1);
                     } else {
                       onPlay(item);
                     }

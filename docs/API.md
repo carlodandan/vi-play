@@ -67,18 +67,19 @@ Real-time media resolvers use **Server-Sent Events (`text/event-stream`)** to st
 * **Query Parameters**:
   | Parameter | Type | Required | Description |
   |---|---|---|---|
-  | `id` | `number` | Yes | The TMDB Movie ID (e.g. `693134` for Dune: Part Two). |
+  | `id` | `number` | Yes | The TMDB Movie ID (e.g. `693134` for Dune: Part Two, `129` for Spirited Away). |
 * **Headers**: `Accept: text/event-stream`
+* **Note**: Anime feature films (such as *Spirited Away*, *Your Name.*) stream via `/movie` because TMDB treats them as movies.
 
-### 3.2 Stream TV Show / Anime
+### 3.2 Stream TV Show / Anime Series
 * **Method**: `GET`
 * **Endpoint**: `/tv`
 * **Query Parameters**:
   | Parameter | Type | Required | Description |
   |---|---|---|---|
-  | `id` | `number` | Yes | The TMDB TV Show ID. |
-  | `season` | `number` | Yes | Season number (1-indexed). |
-  | `episode` | `number` | Yes | Episode number (1-indexed). |
+  | `id` | `number` | Yes | The TMDB TV Show / Anime Series ID (e.g. `209867` for Solo Leveling, `1429` for Attack on Titan). |
+  | `season` | `number` | No | Season number (1-indexed, default: `1`). |
+  | `episode` | `number` | No | Episode number (1-indexed, default: `1`). |
 * **Headers**: `Accept: text/event-stream`
 
 ### SSE Event Stream Protocol
@@ -98,13 +99,13 @@ Real-time media resolvers use **Server-Sent Events (`text/event-stream`)** to st
        {
          "label": "English",
          "language": "en",
-         "url": "https://..."
+         "file": "https://..."
        }
      ]
    }
    ```
 
-2. **`event: source`** (Emitted repeatedly as scraper providers resolve):
+2. **`event: source`** (Emitted as each provider resolves):
    ```json
    {
      "type": "source",
@@ -116,21 +117,18 @@ Real-time media resolvers use **Server-Sent Events (`text/event-stream`)** to st
    }
    ```
 
-3. **`event: done`** (Emitted when search completes or maximum sources reached):
+3. **`event: done`** (Emitted when all configured scrapers complete, or once 8
+   sources have been emitted):
    ```json
    {
      "type": "done",
-     "total": 6
+     "total": 4
    }
    ```
 
-4. **`event: error`** (Emitted if fatal error occurs):
-   ```json
-   {
-     "type": "error",
-     "message": "No available streams found."
-   }
-   ```
+4. **Streaming errors**: The Worker does not currently emit an `event: error`
+   message. If stream resolution throws, it closes the writer, so clients observe
+   the SSE connection ending without a terminal error event.
 
 ---
 
@@ -145,6 +143,7 @@ All discovery endpoints feature Cloudflare Edge Caching (`cf.cacheTtl`) and stan
   | Parameter | Type | Default | Description |
   |---|---|---|---|
   | `type` | `string` | `all` | `all`, `movie`, `tv`, or `anime`. |
+  | `media_type` | `string` | optional | When `type=anime`, optionally filter to `movie` (anime films) or `tv` (anime series). When omitted, interleaves top popular anime series and films. |
   | `page` | `number` | `1` | Pagination page number. |
 * **Caching**: `Cache-Control: public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400`
 
@@ -156,7 +155,8 @@ All discovery endpoints feature Cloudflare Edge Caching (`cf.cacheTtl`) and stan
 * **Query Parameters**:
   | Parameter | Type | Default | Description |
   |---|---|---|---|
-  | `type` | `string` | `movie` | `movie`, `tv`, or `anime`. When `anime`, queries Japanese animation exclusively (`with_genres=16&with_original_language=ja`). |
+  | `type` | `string` | `movie` | `movie`, `tv`, or `anime`. |
+  | `media_type` | `string` | optional | When `type=anime`, optionally filter to `movie` (anime films) or `tv` (anime series). |
   | `page` | `number` | `1` | Pagination page number. |
 * **Caching**: `Cache-Control: public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400`
 
@@ -180,8 +180,9 @@ All discovery endpoints feature Cloudflare Edge Caching (`cf.cacheTtl`) and stan
 * **Query Parameters**:
   | Parameter | Type | Required | Description |
   |---|---|---|---|
-  | `type` | `string` | Yes | `movie` or `tv`. |
   | `id` | `number` | Yes | TMDB item ID. |
+  | `type` | `string` | No | `movie`, `tv`, or `anime` (Default: `movie`). |
+  | `media_type` | `string` | No | Explicit underlying TMDB entity (`movie` or `tv`). If omitted when `type=anime`, automatically resolves with automatic fallback. |
 * **Response `(200 OK)`**:
   ```json
   {
@@ -189,6 +190,7 @@ All discovery endpoints feature Cloudflare Edge Caching (`cf.cacheTtl`) and stan
       "id": 209867,
       "title": "Solo Leveling",
       "type": "anime",
+      "media_type": "tv",
       "overview": "...",
       "poster_path": "https://image.tmdb.org/t/p/w500/...",
       "backdrop_path": "https://image.tmdb.org/t/p/original/...",
@@ -259,3 +261,20 @@ Retry-After: 30
 * `404 Not Found`: Endpoint or requested media not found.
 * `429 Too Many Requests`: IP rate limit exceeded (Retry after header specified).
 * `502 Bad Gateway`: Upstream TMDB or scraper provider connectivity failure.
+
+---
+
+## 7. Client-Side SPA Routes & Deep Links
+
+VPlay integrates `react-router-dom` with synchronized URL paths and bookmarkable deep links:
+
+| Path Pattern | View | Behavior |
+|---|---|---|
+| `/` | Home | Renders Hero Carousel & all shelves (Trending, Anime, Movies, TV, Sci-Fi). |
+| `/movies` | Category Grid | Filters live catalog for Movies. |
+| `/tv` | Category Grid | Filters live catalog for TV Series. |
+| `/anime` | Category Grid | Filters live catalog for Japanese Anime. |
+| `/watchlist` | Watchlist Grid | Displays user bookmarks stored in local storage. |
+| `/:type/:id` | Detail Modal | Resolves media details and displays synopsis, cast, and episode list (`/movie/693134`, `/tv/209867`). |
+| `/watch/:type/:id` | Video Player | Launches full-screen streaming player (movies or series defaulting to S1 E1). |
+| `/watch/:type/:id/:season/:episode` | Video Player | Launches streaming player at specific season and episode (`/watch/tv/209867/1/2`). |

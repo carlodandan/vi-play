@@ -69,7 +69,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   const isWatchlisted = watchlistIds.includes(currentItem.id);
   const typeLabel =
     currentItem.type === "anime"
-      ? "Anime Series"
+      ? currentItem.media_type === "movie"
+        ? "Anime Film"
+        : "Anime Series"
       : currentItem.type === "tv"
         ? "TV Series"
         : "Movie";

@@ -20,6 +20,7 @@ export interface MediaItem {
   title: string;
   original_title?: string;
   type: MediaType;
+  media_type?: "movie" | "tv"; // Underlying TMDB entity type
   overview: string;
   poster_path: string;
   backdrop_path: string;

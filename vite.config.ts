@@ -18,13 +18,15 @@ export default defineConfig({
         target: 'http://127.0.0.1:8787',
         changeOrigin: true,
       },
-      '/movie': {
+      // Only proxy stream endpoints with query params; bypass any browser HTML page navigation
+      '^/(movie|tv)($|\\?)': {
         target: 'http://127.0.0.1:8787',
         changeOrigin: true,
-      },
-      '/tv': {
-        target: 'http://127.0.0.1:8787',
-        changeOrigin: true,
+        bypass: (req) => {
+          if (req.headers.accept?.includes('text/html')) {
+            return '/index.html';
+          }
+        },
       },
     },
   },

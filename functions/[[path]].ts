@@ -16,8 +16,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
 
-  // Streaming API routes
-  if (url.pathname === '/movie' || url.pathname === '/tv' || url.pathname.startsWith('/api')) {
+  const isHtmlRequest = request.headers.get('accept')?.includes('text/html');
+
+  // Streaming API routes (SSE / JSON / Proxies)
+  if (!isHtmlRequest && (url.pathname === '/movie' || url.pathname === '/tv' || url.pathname.startsWith('/api'))) {
     // 1. Delegate to private Cloudflare Worker via Service Binding
     if (env.VYLA_WORKER) {
       return env.VYLA_WORKER.fetch(request);

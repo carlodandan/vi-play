@@ -80,22 +80,29 @@ export async function getSessionToken(
  */
 export async function streamMediaSources({
   tmdbId,
+  mediaType = "movie",
   season,
   episode,
   onEvent,
   signal,
 }: {
   tmdbId: number;
+  mediaType?: "movie" | "tv" | "anime";
   season?: number;
   episode?: number;
   onEvent: (event: VylaStreamEvent) => void;
   signal?: AbortSignal;
 }): Promise<void> {
   const base = API_BASE_URL;
-  const isTv = season !== undefined && episode !== undefined;
+  const isTv =
+    mediaType === "tv" ||
+    (season !== undefined && episode !== undefined);
+
+  const s = season ?? 1;
+  const e = episode ?? 1;
 
   const url = isTv
-    ? `${base}/tv?id=${tmdbId}&season=${season}&episode=${episode}`
+    ? `${base}/tv?id=${tmdbId}&season=${s}&episode=${e}`
     : `${base}/movie?id=${tmdbId}`;
 
   const token = await getSessionToken();
@@ -221,7 +228,7 @@ export async function checkApiHealth(): Promise<{
  * Fetch dedicated subtitle tracks
  */
 export async function fetchExtraSubtitles(
-  type: "movie" | "tv",
+  type: "movie" | "tv" | "anime",
   tmdbId: number,
   season?: number,
   episode?: number,
@@ -229,10 +236,15 @@ export async function fetchExtraSubtitles(
   const base = API_BASE_URL;
   const token = await getSessionToken().catch(() => null);
 
-  const endpoint =
-    type === "movie"
-      ? `${base}/api/subtitles/movie/${tmdbId}`
-      : `${base}/api/subtitles/tv/${tmdbId}/${season}/${episode}`;
+  const isTv =
+    type === "tv" ||
+    (season !== undefined && episode !== undefined);
+  const s = season ?? 1;
+  const e = episode ?? 1;
+
+  const endpoint = isTv
+    ? `${base}/api/subtitles/tv/${tmdbId}/${s}/${e}`
+    : `${base}/api/subtitles/movie/${tmdbId}`;
 
   try {
     const res = await fetch(endpoint, {

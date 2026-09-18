@@ -9,6 +9,7 @@ import { isMp4Stream, streamMediaSources } from "../services/vylaApi.ts";
 
 export interface UseStreamPlayerProps {
   tmdbId: number | null;
+  mediaType?: "movie" | "tv" | "anime";
   season?: number;
   episode?: number;
   autoStart?: boolean;
@@ -23,6 +24,7 @@ export interface StreamQualityLevel {
 
 export function useStreamPlayer({
   tmdbId,
+  mediaType = "movie",
   season,
   episode,
   autoStart = true,
@@ -32,6 +34,7 @@ export function useStreamPlayer({
   const abortControllerRef = useRef<AbortController | null>(null);
   const fallbackQueueRef = useRef<StreamSource[]>([]);
   const hasStartedPlaybackRef = useRef(false);
+  const sourcesCountRef = useRef(0);
 
   const [sources, setSources] = useState<StreamSource[]>([]);
   const [activeSource, setActiveSource] = useState<StreamSource | null>(null);
@@ -44,6 +47,7 @@ export function useStreamPlayer({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDone, setIsDone] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryGeneration, setRetryGeneration] = useState(0);
 
   // Clean up HLS instance safely
   const destroyHls = () => {
@@ -171,6 +175,16 @@ export function useStreamPlayer({
 
     hasStartedPlaybackRef.current = false;
     fallbackQueueRef.current = [];
+    sourcesCountRef.current = 0;
+    setSources([]);
+    setActiveSource(null);
+    setSubtitles([]);
+    setQualityLevels([]);
+    setCurrentQuality(-1);
+    setStatusMessage("Connecting to stream providers…");
+    setIsLoading(true);
+    setIsDone(false);
+    setError(null);
 
     // Abort previous stream
     abortControllerRef.current?.abort();
@@ -179,6 +193,7 @@ export function useStreamPlayer({
 
     streamMediaSources({
       tmdbId,
+      mediaType,
       season,
       episode,
       signal: controller.signal,
@@ -191,6 +206,7 @@ export function useStreamPlayer({
 
         if (event.type === "source" && event.source) {
           const newSource = event.source;
+          sourcesCountRef.current++;
           setSources((prev) => {
             if (prev.some((s) => s.url === newSource.url)) return prev;
             return [...prev, newSource];
@@ -209,19 +225,20 @@ export function useStreamPlayer({
           setIsDone(true);
           if (!hasStartedPlaybackRef.current) {
             setIsLoading(false);
-            setStatusMessage(
-              "No working stream providers found for this title.",
-            );
+            if (sourcesCountRef.current === 0) {
+              setError("No available streams returned from providers.");
+            }
           }
         }
 
-        if (event.type === "error" && event.error) {
-          setError(event.error);
+        if (event.type === "error") {
+          setError(event.error || "Failed to resolve stream sources.");
+          setIsLoading(false);
         }
       },
     }).catch((err) => {
       if (err.name !== "AbortError") {
-        setError(err.message || "Stream connection failed");
+        setError(err.message || "Network error resolving stream.");
         setIsLoading(false);
       }
     });
@@ -230,7 +247,7 @@ export function useStreamPlayer({
       controller.abort();
       destroyHls();
     };
-  }, [tmdbId, season, episode, autoStart]);
+  }, [tmdbId, mediaType, season, episode, autoStart, retryGeneration]);
 
   return {
     videoRef,
@@ -245,10 +262,6 @@ export function useStreamPlayer({
     error,
     switchSource,
     switchQuality,
-    retry: () => {
-      if (sources.length > 0) {
-        playSource(sources[0]);
-      }
-    },
+    retry: () => setRetryGeneration((generation) => generation + 1),
   };
 }
