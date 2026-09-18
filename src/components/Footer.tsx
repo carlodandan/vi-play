@@ -1,4 +1,4 @@
-import { Play, ShieldAlert, Cloud, Radio, Code2 } from "lucide-react";
+import { ShieldAlert, Cloud, Radio, Code2 } from "lucide-react";
 
 export const Footer: React.FC = () => {
   return (
@@ -190,12 +190,23 @@ export const Footer: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <a
               href="/"
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-white no-underline"
-              style={{ background: "var(--color-accent)" }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden no-underline transition-all hover:scale-105"
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.10)",
+                boxShadow: "0 0 10px var(--color-accent-glow)",
+              }}
+              title="Vi-Play Home"
             >
-              <Play
-                className="w-3.5 h-3.5 fill-current ml-0.5"
-                aria-hidden="true"
+              <img
+                src="/favicon-96x96.png"
+                alt="Vi-Play Logo"
+                width={20}
+                height={20}
+                className="w-5 h-5 object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = "/favicon-32x32.png";
+                }}
               />
             </a>
             <a href="/" className="font-bold text-white text-base no-underline">
