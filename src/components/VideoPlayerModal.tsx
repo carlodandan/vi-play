@@ -538,7 +538,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                           </span>
                           <div className="flex items-center gap-1 ml-2">
                             {hasFailed && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/70 text-rose-400 border border-rose-900/50">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950/70 text-rose-400 border border-rose-900/50">
                                 Failed
                               </span>
                             )}

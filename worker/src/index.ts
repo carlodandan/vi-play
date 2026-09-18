@@ -409,7 +409,7 @@ export default {
     }
 
     // 3b. Diagnostics & Testing: GET [/api]/test/:id and GET [/api]/debug/:id
-    const testMatch = url.pathname.match(/^(?:\/api)?\/test(?:\/([^/]+))?/);
+    const testMatch = url.pathname.match(/^(?:\/api)?\/test(?:\/([^/]+))?$/);
     if (testMatch && (testMatch[1] || url.searchParams.has("id"))) {
       const id = testMatch[1] || url.searchParams.get("id")!;
       const source = url.searchParams.get("source") || "vidlink";
@@ -492,7 +492,7 @@ export default {
       }
     }
 
-    const debugMatch = url.pathname.match(/^(?:\/api)?\/debug(?:\/([^/]+))?/);
+    const debugMatch = url.pathname.match(/^(?:\/api)?\/debug(?:\/([^/]+))?$/);
     if (debugMatch && (debugMatch[1] || url.searchParams.has("id"))) {
       const id = debugMatch[1] || url.searchParams.get("id")!;
       const source = url.searchParams.get("source") || "vidlink";
@@ -961,6 +961,13 @@ export default {
               ),
             ]);
 
+            if (
+              !(tvRes.status === "fulfilled" && tvRes.value.ok) &&
+              !(movieRes.status === "fulfilled" && movieRes.value.ok)
+            ) {
+              throw new Error("TMDB anime requests failed");
+            }
+
             const tvData: any =
               tvRes.status === "fulfilled" && tvRes.value.ok
                 ? await tvRes.value.json()
@@ -1111,6 +1118,13 @@ export default {
                 } as any,
               ),
             ]);
+
+            if (
+              !(tvRes.status === "fulfilled" && tvRes.value.ok) &&
+              !(movieRes.status === "fulfilled" && movieRes.value.ok)
+            ) {
+              throw new Error("TMDB anime requests failed");
+            }
 
             const tvData: any =
               tvRes.status === "fulfilled" && tvRes.value.ok
