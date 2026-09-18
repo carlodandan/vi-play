@@ -47,6 +47,7 @@ export function useStreamPlayer({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDone, setIsDone] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryGeneration, setRetryGeneration] = useState(0);
 
   // Clean up HLS instance safely
   const destroyHls = () => {
@@ -175,6 +176,15 @@ export function useStreamPlayer({
     hasStartedPlaybackRef.current = false;
     fallbackQueueRef.current = [];
     sourcesCountRef.current = 0;
+    setSources([]);
+    setActiveSource(null);
+    setSubtitles([]);
+    setQualityLevels([]);
+    setCurrentQuality(-1);
+    setStatusMessage("Connecting to stream providers…");
+    setIsLoading(true);
+    setIsDone(false);
+    setError(null);
 
     // Abort previous stream
     abortControllerRef.current?.abort();
@@ -237,7 +247,7 @@ export function useStreamPlayer({
       controller.abort();
       destroyHls();
     };
-  }, [tmdbId, mediaType, season, episode, autoStart]);
+  }, [tmdbId, mediaType, season, episode, autoStart, retryGeneration]);
 
   return {
     videoRef,
@@ -252,10 +262,6 @@ export function useStreamPlayer({
     error,
     switchSource,
     switchQuality,
-    retry: () => {
-      if (sources.length > 0) {
-        playSource(sources[0]);
-      }
-    },
+    retry: () => setRetryGeneration((generation) => generation + 1),
   };
 }

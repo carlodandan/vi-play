@@ -1246,7 +1246,12 @@ export default {
           signal: AbortSignal.timeout(8000),
           cf: { cacheTtl: 86400, cacheEverything: true },
         } as any);
-        if (!res.ok) return null;
+        if (res.status === 404) return null;
+        if (!res.ok) {
+          throw new Error(
+            `TMDB ${entity} request failed with status ${res.status}`,
+          );
+        }
         const data: any = await res.json();
         return { data, entity };
       };

@@ -117,7 +117,8 @@ Real-time media resolvers use **Server-Sent Events (`text/event-stream`)** to st
    }
    ```
 
-3. **`event: done`** (Emitted when all 48+ scrapers complete):
+3. **`event: done`** (Emitted when all configured scrapers complete, or once 8
+   sources have been emitted):
    ```json
    {
      "type": "done",
@@ -125,13 +126,9 @@ Real-time media resolvers use **Server-Sent Events (`text/event-stream`)** to st
    }
    ```
 
-4. **`event: error`** (Emitted if catastrophic resolution failure):
-   ```json
-   {
-     "type": "error",
-     "message": "No available streams found."
-   }
-   ```
+4. **Streaming errors**: The Worker does not currently emit an `event: error`
+   message. If stream resolution throws, it closes the writer, so clients observe
+   the SSE connection ending without a terminal error event.
 
 ---
 
