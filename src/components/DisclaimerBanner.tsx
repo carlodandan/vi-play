@@ -30,8 +30,8 @@ export const DisclaimerBanner: React.FC = () => {
           >
             NOTICE:
           </strong>
-          VPlay is an experimental media interface for entertainment &
-          educational purposes only. VPlay does not host or store any media
+          V-Play is an experimental media interface for entertainment &
+          educational purposes only. V-Play does not host or store any media
           files.
         </span>
       </div>

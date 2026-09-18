@@ -362,7 +362,7 @@ export default {
       const sources = sdk.getSources(true);
       return addCorsHeaders(
         Response.json({
-          name: "VPlay Vyla Gateway",
+          name: "V-Play Vyla Gateway",
           status: "online",
           mode: "self-contained",
           providersCount: sources.length,
