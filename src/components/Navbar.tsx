@@ -94,15 +94,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="flex items-center gap-2.5 group cursor-pointer no-underline text-inherit"
             >
-              {/* Cinematic V mark — red square with play triangle */}
+              {/* Brand Logo Icon */}
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg transition-all group-hover:scale-105"
                 style={{
-                  background: "var(--color-accent)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.10)",
                   boxShadow: "0 0 16px var(--color-accent-glow)",
                 }}
               >
-                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                <img
+                  src="/favicon-96x96.png"
+                  alt="Vi-Play Logo"
+                  width={26}
+                  height={26}
+                  className="w-6.5 h-6.5 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = "/icons/apple-icon.png";
+                  }}
+                />
               </div>
               <span className="text-xl font-black tracking-tight text-white">
                 Vi-<span style={{ color: "var(--color-accent)" }}>Play</span>
