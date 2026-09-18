@@ -112,6 +112,191 @@ async function createSessionToken(ip: string): Promise<string> {
   return `vplay_${ts}_${sig}`;
 }
 
+// ─── Stream Resolution & Verification Caches ─────────────────────────────────
+interface VerifyCacheEntry {
+  ok: boolean;
+  status: number;
+  expires: number;
+}
+const verifyCache = new Map<string, VerifyCacheEntry>();
+
+interface ResolvedSourceItem {
+  source: string;
+  label: string;
+  url: string;
+  verified?: boolean;
+}
+
+interface CachedStreamGroup {
+  sources: ResolvedSourceItem[];
+  expires: number;
+}
+
+const streamCache = new Map<string, CachedStreamGroup>();
+const inFlightResolutions = new Map<string, Promise<ResolvedSourceItem[]>>();
+
+async function verifyStreamPlayable(
+  url: string,
+  headers?: Record<string, string>,
+): Promise<boolean> {
+  const now = Date.now();
+  const cached = verifyCache.get(url);
+  if (cached && cached.expires > now) {
+    return cached.ok;
+  }
+
+  const forwardHeaders = new Headers({
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    Range: "bytes=0-0",
+  });
+  if (headers?.Referer) forwardHeaders.set("Referer", headers.Referer);
+  if (headers?.Origin) forwardHeaders.set("Origin", headers.Origin);
+
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      headers: forwardHeaders,
+      signal: AbortSignal.timeout(3500),
+    });
+
+    let ok =
+      res.ok ||
+      res.status === 206 ||
+      res.status === 301 ||
+      res.status === 302 ||
+      res.status === 307 ||
+      res.status === 308;
+
+    // Some CDNs reject HEAD requests with 405 Method Not Allowed; fallback to byte-range GET
+    if (res.status === 405) {
+      const getRes = await fetch(url, {
+        method: "GET",
+        headers: forwardHeaders,
+        signal: AbortSignal.timeout(3000),
+      });
+      ok = getRes.ok || getRes.status === 206;
+    }
+
+    verifyCache.set(url, {
+      ok,
+      status: res.status,
+      expires: now + 180_000,
+    });
+
+    if (verifyCache.size > 500) {
+      const oldestKey = verifyCache.keys().next().value;
+      if (oldestKey) verifyCache.delete(oldestKey);
+    }
+
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveAndVerifySources(
+  sdk: InstanceType<typeof VylaSDK>,
+  id: string,
+  season: number | null,
+  episode: number | null,
+  onSourceFound?: (source: ResolvedSourceItem) => Promise<void>,
+): Promise<ResolvedSourceItem[]> {
+  const allSources = sdk.getSources(true);
+  const priorityKeys = [
+    "vidlink",
+    "vidfast",
+    "rivestream",
+    "vixsrc",
+    "4khdhub",
+    "vidrock",
+    "vidzee",
+    "meowtv",
+  ];
+  const sortedSources = [...allSources].sort((a, b) => {
+    const aIdx = priorityKeys.indexOf(a.key);
+    const bIdx = priorityKeys.indexOf(b.key);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return 0;
+  });
+
+  const verifiedSources: ResolvedSourceItem[] = [];
+  const candidateBacklog: ResolvedSourceItem[] = [];
+  const batchSize = 4;
+
+  for (let i = 0; i < sortedSources.length; i += batchSize) {
+    const batch = sortedSources.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(async (sourceCfg) => {
+        const streamData = await Promise.race([
+          sdk.getStream(sourceCfg.key, id, season, episode),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        ]);
+        return { sourceCfg, streamData };
+      }),
+    );
+
+    for (const r of results) {
+      if (r.status !== "fulfilled" || !r.value?.streamData) continue;
+      const { sourceCfg, streamData } = r.value;
+
+      const items: StreamResult[] = [];
+      if ("allUrls" in streamData && Array.isArray(streamData.allUrls)) {
+        items.push(...streamData.allUrls);
+      } else if ("url" in streamData && typeof streamData.url === "string") {
+        items.push(streamData as StreamResult);
+      }
+
+      for (const item of items) {
+        if (!item.url) continue;
+
+        let playableUrl = item.url;
+        const hasHeaders =
+          item.headers && (item.headers.Referer || item.headers.Origin);
+        if (hasHeaders || !item.skipProxy) {
+          const params = new URLSearchParams({ url: item.url });
+          if (item.headers?.Referer) params.set("ref", item.headers.Referer);
+          if (item.headers?.Origin) params.set("origin", item.headers.Origin);
+          playableUrl = `/api?${params.toString()}`;
+        }
+
+        const sourceItem: ResolvedSourceItem = {
+          source: sourceCfg.key,
+          label: item.server || sourceCfg.label,
+          url: playableUrl,
+        };
+
+        const isPlayable = await verifyStreamPlayable(item.url, item.headers);
+        if (isPlayable) {
+          sourceItem.verified = true;
+          verifiedSources.push(sourceItem);
+          if (onSourceFound) {
+            await onSourceFound(sourceItem);
+          }
+        } else {
+          candidateBacklog.push(sourceItem);
+        }
+      }
+    }
+
+    if (verifiedSources.length >= 3) break;
+  }
+
+  // Defensive fallback: If all probes failed verification, emit candidates from backlog
+  if (verifiedSources.length === 0 && candidateBacklog.length > 0) {
+    for (const item of candidateBacklog.slice(0, 3)) {
+      verifiedSources.push(item);
+      if (onSourceFound) {
+        await onSourceFound(item);
+      }
+    }
+  }
+
+  return verifiedSources;
+}
+
 function resolveTmdbKey(env: Env): string {
   const raw = env.TMDB_API_KEY || env.VITE_TMDB_API_KEY || "";
   if (raw.startsWith("ey") && raw.includes(".")) {
@@ -223,18 +408,166 @@ export default {
       );
     }
 
-    // 4. Subtitles: GET /api/subtitles/movie/:id or GET /api/subtitles/tv/:id/:season/:episode
+    // 3b. Diagnostics & Testing: GET [/api]/test/:id and GET [/api]/debug/:id
+    const testMatch = url.pathname.match(/^(?:\/api)?\/test(?:\/([^/]+))?$/);
+    if (testMatch && (testMatch[1] || url.searchParams.has("id"))) {
+      const id = testMatch[1] || url.searchParams.get("id")!;
+      const source = url.searchParams.get("source") || "vidlink";
+      const season = url.searchParams.get("season")
+        ? Number(url.searchParams.get("season"))
+        : null;
+      const episode = url.searchParams.get("episode")
+        ? Number(url.searchParams.get("episode"))
+        : null;
+
+      const startTime = Date.now();
+      try {
+        const streamData = await Promise.race([
+          sdk.getStream(source, id, season, episode),
+          new Promise<null>((resolve) =>
+            setTimeout(() => resolve(null), 10000),
+          ),
+        ]);
+        const timeMs = Date.now() - startTime;
+
+        if (!streamData) {
+          return addCorsHeaders(
+            Response.json({
+              status: "fail",
+              source,
+              id,
+              found: false,
+              playable: false,
+              error: "Source resolution timed out or returned empty",
+              timeMs,
+            }),
+          );
+        }
+
+        let testUrl = "";
+        let headers: Record<string, string> | undefined;
+        if (
+          "allUrls" in streamData &&
+          Array.isArray(streamData.allUrls) &&
+          streamData.allUrls.length > 0
+        ) {
+          testUrl = streamData.allUrls[0].url;
+          headers = streamData.allUrls[0].headers;
+        } else if ("url" in streamData && typeof streamData.url === "string") {
+          testUrl = streamData.url;
+          headers = (streamData as any).headers;
+        }
+
+        const isPlayable = testUrl
+          ? await verifyStreamPlayable(testUrl, headers)
+          : false;
+
+        return addCorsHeaders(
+          Response.json({
+            status: isPlayable ? "ok" : "unplayable",
+            source,
+            id,
+            found: Boolean(testUrl),
+            playable: isPlayable,
+            url: testUrl || null,
+            timeMs,
+          }),
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return addCorsHeaders(
+          Response.json(
+            {
+              status: "error",
+              source,
+              id,
+              found: false,
+              playable: false,
+              error: msg,
+              timeMs: Date.now() - startTime,
+            },
+            { status: 500 },
+          ),
+        );
+      }
+    }
+
+    const debugMatch = url.pathname.match(/^(?:\/api)?\/debug(?:\/([^/]+))?$/);
+    if (debugMatch && (debugMatch[1] || url.searchParams.has("id"))) {
+      const id = debugMatch[1] || url.searchParams.get("id")!;
+      const source = url.searchParams.get("source") || "vidlink";
+      const season = url.searchParams.get("season")
+        ? Number(url.searchParams.get("season"))
+        : null;
+      const episode = url.searchParams.get("episode")
+        ? Number(url.searchParams.get("episode"))
+        : null;
+
+      const startTime = Date.now();
+      try {
+        const streamData = await Promise.race([
+          sdk.getStream(source, id, season, episode),
+          new Promise<null>((resolve) =>
+            setTimeout(() => resolve(null), 12000),
+          ),
+        ]);
+        return addCorsHeaders(
+          Response.json({
+            status: "ok",
+            source,
+            id,
+            timeMs: Date.now() - startTime,
+            raw: streamData || null,
+          }),
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return addCorsHeaders(
+          Response.json(
+            {
+              status: "error",
+              source,
+              id,
+              error: msg,
+              timeMs: Date.now() - startTime,
+            },
+            { status: 500 },
+          ),
+        );
+      }
+    }
+
+    // 4. Subtitles: GET [/api]/subtitles/movie/:id or GET [/api]/subtitles/tv/:id/:season/:episode
     const movieSubMatch = url.pathname.match(
-      /^\/api\/subtitles\/movie\/([^/]+)/,
+      /^(?:\/api)?\/subtitles\/movie\/([^/]+)/,
     );
     const tvSubMatch = url.pathname.match(
-      /^\/api\/subtitles\/tv\/([^/]+)\/([^/]+)\/([^/]+)/,
+      /^(?:\/api)?\/subtitles\/tv\/([^/]+)\/([^/]+)\/([^/]+)/,
     );
-    if (movieSubMatch || tvSubMatch) {
+    const isSubQuery =
+      url.pathname === "/subtitles" || url.pathname === "/api/subtitles";
+
+    if (
+      movieSubMatch ||
+      tvSubMatch ||
+      (isSubQuery && url.searchParams.has("id"))
+    ) {
       try {
-        const id = movieSubMatch ? movieSubMatch[1] : tvSubMatch![1];
-        const s = tvSubMatch ? Number(tvSubMatch[2]) : null;
-        const e = tvSubMatch ? Number(tvSubMatch[3]) : null;
+        const id = movieSubMatch
+          ? movieSubMatch[1]
+          : tvSubMatch
+            ? tvSubMatch[1]
+            : url.searchParams.get("id")!;
+        const s = tvSubMatch
+          ? Number(tvSubMatch[2])
+          : url.searchParams.get("season")
+            ? Number(url.searchParams.get("season"))
+            : null;
+        const e = tvSubMatch
+          ? Number(tvSubMatch[3])
+          : url.searchParams.get("episode")
+            ? Number(url.searchParams.get("episode"))
+            : null;
         const subtitles = await sdk.getSubtitles(id, s, e);
         return addCorsHeaders(Response.json({ subtitles: subtitles || [] }));
       } catch (err: unknown) {
@@ -243,18 +576,37 @@ export default {
       }
     }
 
-    // 5. Downloads: GET /api/downloads/movie/:id or GET /api/downloads/tv/:id/:season/:episode
+    // 5. Downloads: GET [/api]/downloads/movie/:id or GET [/api]/downloads/tv/:id/:season/:episode
     const movieDownMatch = url.pathname.match(
-      /^\/api\/downloads\/movie\/([^/]+)/,
+      /^(?:\/api)?\/downloads\/movie\/([^/]+)/,
     );
     const tvDownMatch = url.pathname.match(
-      /^\/api\/downloads\/tv\/([^/]+)\/([^/]+)\/([^/]+)/,
+      /^(?:\/api)?\/downloads\/tv\/([^/]+)\/([^/]+)\/([^/]+)/,
     );
-    if (movieDownMatch || tvDownMatch) {
+    const isDownQuery =
+      url.pathname === "/downloads" || url.pathname === "/api/downloads";
+
+    if (
+      movieDownMatch ||
+      tvDownMatch ||
+      (isDownQuery && url.searchParams.has("id"))
+    ) {
       try {
-        const id = movieDownMatch ? movieDownMatch[1] : tvDownMatch![1];
-        const s = tvDownMatch ? Number(tvDownMatch[2]) : null;
-        const e = tvDownMatch ? Number(tvDownMatch[3]) : null;
+        const id = movieDownMatch
+          ? movieDownMatch[1]
+          : tvDownMatch
+            ? tvDownMatch[1]
+            : url.searchParams.get("id")!;
+        const s = tvDownMatch
+          ? Number(tvDownMatch[2])
+          : url.searchParams.get("season")
+            ? Number(url.searchParams.get("season"))
+            : null;
+        const e = tvDownMatch
+          ? Number(tvDownMatch[3])
+          : url.searchParams.get("episode")
+            ? Number(url.searchParams.get("episode"))
+            : null;
         const downloads = await Promise.race([
           sdk.getDownloads(id, s, e),
           new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
@@ -271,6 +623,10 @@ export default {
       const target = url.searchParams.get("url")!;
       const customRef = url.searchParams.get("ref");
       const customOrigin = url.searchParams.get("origin");
+      const fullProxy =
+        url.searchParams.get("full") === "1" ||
+        Boolean(customRef) ||
+        Boolean(customOrigin);
 
       const forwardHeaders = new Headers();
       forwardHeaders.set(
@@ -315,13 +671,17 @@ export default {
                 }
                 if (trimmed.startsWith("#")) return line;
                 const abs = new URL(trimmed, baseTargetUrl).toString();
-                return `/api?url=${encodeURIComponent(abs)}${customRef ? `&ref=${encodeURIComponent(customRef)}` : ""}${customOrigin ? `&origin=${encodeURIComponent(customOrigin)}` : ""}`;
+                if (fullProxy) {
+                  return `/api?url=${encodeURIComponent(abs)}${customRef ? `&ref=${encodeURIComponent(customRef)}` : ""}${customOrigin ? `&origin=${encodeURIComponent(customOrigin)}` : ""}`;
+                }
+                return abs;
               })
               .join("\n");
 
             const headers = new Headers();
-            for (const [k, v] of Object.entries(CORS_HEADERS))
+            for (const [k, v] of Object.entries(CORS_HEADERS)) {
               headers.set(k, v);
+            }
             headers.set(
               "Content-Type",
               contentType || "application/vnd.apple.mpegurl",
@@ -336,7 +696,9 @@ export default {
 
         // Direct media stream / segment passthrough
         const headers = new Headers(upstreamRes.headers);
-        for (const [k, v] of Object.entries(CORS_HEADERS)) headers.set(k, v);
+        for (const [k, v] of Object.entries(CORS_HEADERS)) {
+          headers.set(k, v);
+        }
         return new Response(upstreamRes.body, {
           status: upstreamRes.status,
           statusText: upstreamRes.statusText,
@@ -409,95 +771,94 @@ export default {
             subtitles: subtitles || [],
           });
 
-          // C. Query top reliable providers concurrently
-          const allSources = sdk.getSources(true);
-          const priorityKeys = [
-            "vidlink",
-            "vidfast",
-            "rivestream",
-            "vixsrc",
-            "4khdhub",
-            "vidrock",
-            "vidzee",
-            "meowtv",
-          ];
-          const sortedSources = [...allSources].sort((a, b) => {
-            const aIdx = priorityKeys.indexOf(a.key);
-            const bIdx = priorityKeys.indexOf(b.key);
-            if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-            if (aIdx !== -1) return -1;
-            if (bIdx !== -1) return 1;
-            return 0;
-          });
+          // C. Cache check & In-Flight Deduplication
+          const cacheKey = `${isTv ? "tv" : "movie"}:${id}:${season || 1}:${episode || 1}`;
 
-          let emittedCount = 0;
-          const batchSize = 6;
-          for (let i = 0; i < sortedSources.length; i += batchSize) {
-            const batch = sortedSources.slice(i, i + batchSize);
-            const results = await Promise.allSettled(
-              batch.map(async (sourceCfg) => {
-                const streamData = await Promise.race([
-                  sdk.getStream(sourceCfg.key, id, season, episode),
-                  new Promise<null>((resolve) =>
-                    setTimeout(() => resolve(null), 10000),
-                  ),
-                ]);
-                return { sourceCfg, streamData };
-              }),
-            );
+          const cached = streamCache.get(cacheKey);
+          if (
+            cached &&
+            cached.expires > Date.now() &&
+            cached.sources.length > 0
+          ) {
+            for (const item of cached.sources) {
+              await sendEvent({
+                type: "source",
+                source: {
+                  source: item.source,
+                  label: item.label,
+                  url: item.url,
+                },
+              });
+            }
+            await sendEvent({
+              type: "done",
+              total: cached.sources.length,
+            });
+            return;
+          }
 
-            for (const r of results) {
-              if (r.status !== "fulfilled" || !r.value?.streamData) continue;
-              const { sourceCfg, streamData } = r.value;
+          let resolutionPromise = inFlightResolutions.get(cacheKey);
+          let isInitiator = false;
 
-              const items: StreamResult[] = [];
-              if (
-                "allUrls" in streamData &&
-                Array.isArray(streamData.allUrls)
-              ) {
-                items.push(...streamData.allUrls);
-              } else if (
-                "url" in streamData &&
-                typeof streamData.url === "string"
-              ) {
-                items.push(streamData as StreamResult);
-              }
-
-              for (const item of items) {
-                if (!item.url) continue;
-
-                let playableUrl = item.url;
-                const hasHeaders =
-                  item.headers && (item.headers.Referer || item.headers.Origin);
-                if (hasHeaders || !item.skipProxy) {
-                  const params = new URLSearchParams({ url: item.url });
-                  if (item.headers?.Referer)
-                    params.set("ref", item.headers.Referer);
-                  if (item.headers?.Origin)
-                    params.set("origin", item.headers.Origin);
-                  playableUrl = `/api?${params.toString()}`;
-                }
-
+          if (!resolutionPromise) {
+            isInitiator = true;
+            resolutionPromise = resolveAndVerifySources(
+              sdk,
+              id,
+              season,
+              episode,
+              async (item) => {
                 await sendEvent({
                   type: "source",
                   source: {
-                    source: sourceCfg.key,
-                    label: item.server || sourceCfg.label,
-                    url: playableUrl,
+                    source: item.source,
+                    label: item.label,
+                    url: item.url,
                   },
                 });
-                emittedCount++;
+              },
+            );
+            inFlightResolutions.set(cacheKey, resolutionPromise);
+          }
+
+          try {
+            const finalSources = await resolutionPromise;
+
+            // If this request arrived while another resolution was in-flight, emit the finished sources
+            if (!isInitiator) {
+              for (const item of finalSources) {
+                await sendEvent({
+                  type: "source",
+                  source: {
+                    source: item.source,
+                    label: item.label,
+                    url: item.url,
+                  },
+                });
               }
             }
 
-            if (emittedCount >= 8) break;
-          }
+            if (isInitiator && finalSources.length > 0) {
+              streamCache.set(cacheKey, {
+                sources: finalSources,
+                expires: Date.now() + 300_000,
+              });
+              if (streamCache.size > 200) {
+                const oldest = streamCache.keys().next().value;
+                if (oldest) streamCache.delete(oldest);
+              }
+            }
 
-          // D. Emit 'done' event to close stream
-          await sendEvent({
-            type: "done",
-            total: emittedCount,
-          });
+            // D. Emit 'done' event to close stream
+            await sendEvent({
+              type: "done",
+              total: finalSources.length,
+            });
+          } finally {
+            if (isInitiator) {
+              inFlightResolutions.delete(cacheKey);
+            }
+          }
         } catch {
           // Stream cancelled
         } finally {
@@ -538,12 +899,22 @@ export default {
             if (!res.ok) throw new Error(`TMDB ${res.status}`);
             const data: any = await res.json();
             const items = mapTmdbResults(
-              (data.results || []).map((r: any) => ({ ...r, media_type: "movie" })),
+              (data.results || []).map((r: any) => ({
+                ...r,
+                media_type: "movie",
+              })),
               "anime",
             );
             return addCorsHeaders(
-              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
-              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+              Response.json({
+                results: items,
+                page: data.page,
+                total_pages: data.total_pages,
+              }),
+              {
+                "Cache-Control":
+                  "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+              },
             );
           } else if (mediaTypeParam === "tv") {
             const ep = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
@@ -554,55 +925,92 @@ export default {
             if (!res.ok) throw new Error(`TMDB ${res.status}`);
             const data: any = await res.json();
             const items = mapTmdbResults(
-              (data.results || []).map((r: any) => ({ ...r, media_type: "tv" })),
+              (data.results || []).map((r: any) => ({
+                ...r,
+                media_type: "tv",
+              })),
               "anime",
             );
             return addCorsHeaders(
-              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
-              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+              Response.json({
+                results: items,
+                page: data.page,
+                total_pages: data.total_pages,
+              }),
+              {
+                "Cache-Control":
+                  "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+              },
             );
           } else {
             // Interleave both anime TV series and anime feature films
             const [tvRes, movieRes] = await Promise.allSettled([
               fetch(
                 `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
-                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+                {
+                  signal: AbortSignal.timeout(8000),
+                  cf: { cacheTtl: 3600, cacheEverything: true },
+                } as any,
               ),
               fetch(
                 `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
-                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+                {
+                  signal: AbortSignal.timeout(8000),
+                  cf: { cacheTtl: 3600, cacheEverything: true },
+                } as any,
               ),
             ]);
 
             if (
-              (tvRes.status !== "fulfilled" || !tvRes.value.ok) &&
-              (movieRes.status !== "fulfilled" || !movieRes.value.ok)
+              !(tvRes.status === "fulfilled" && tvRes.value.ok) &&
+              !(movieRes.status === "fulfilled" && movieRes.value.ok)
             ) {
-              throw new Error("TMDB anime feed requests failed");
+              throw new Error("TMDB anime requests failed");
             }
 
-            const tvData: any = tvRes.status === "fulfilled" && tvRes.value.ok ? await tvRes.value.json() : { results: [] };
-            const movieData: any = movieRes.status === "fulfilled" && movieRes.value.ok ? await movieRes.value.json() : { results: [] };
+            const tvData: any =
+              tvRes.status === "fulfilled" && tvRes.value.ok
+                ? await tvRes.value.json()
+                : { results: [] };
+            const movieData: any =
+              movieRes.status === "fulfilled" && movieRes.value.ok
+                ? await movieRes.value.json()
+                : { results: [] };
 
-            const rawTv = (tvData.results || []).map((r: any) => ({ ...r, media_type: "tv" }));
-            const rawMovies = (movieData.results || []).map((r: any) => ({ ...r, media_type: "movie" }));
+            const rawTv = (tvData.results || []).map((r: any) => ({
+              ...r,
+              media_type: "tv",
+            }));
+            const rawMovies = (movieData.results || []).map((r: any) => ({
+              ...r,
+              media_type: "movie",
+            }));
 
             // Merge and sort by popularity
-            const merged = [...rawTv, ...rawMovies].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+            const merged = [...rawTv, ...rawMovies].sort(
+              (a, b) => (b.popularity || 0) - (a.popularity || 0),
+            );
             const items = mapTmdbResults(merged, "anime");
 
             return addCorsHeaders(
               Response.json({
                 results: items,
                 page: Number(page),
-                total_pages: Math.max(tvData.total_pages || 1, movieData.total_pages || 1),
+                total_pages: Math.max(
+                  tvData.total_pages || 1,
+                  movieData.total_pages || 1,
+                ),
               }),
-              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+              {
+                "Cache-Control":
+                  "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+              },
             );
           }
         }
 
-        const tmdbType = type === "movie" ? "movie" : type === "tv" ? "tv" : "all";
+        const tmdbType =
+          type === "movie" ? "movie" : type === "tv" ? "tv" : "all";
         const endpoint = `https://api.themoviedb.org/3/trending/${tmdbType}/week?api_key=${tmdbKey}&page=${page}`;
         const res = await fetch(endpoint, {
           signal: AbortSignal.timeout(8000),
@@ -649,12 +1057,22 @@ export default {
             if (!res.ok) throw new Error(`TMDB ${res.status}`);
             const data: any = await res.json();
             const items = mapTmdbResults(
-              (data.results || []).map((r: any) => ({ ...r, media_type: "movie" })),
+              (data.results || []).map((r: any) => ({
+                ...r,
+                media_type: "movie",
+              })),
               "anime",
             );
             return addCorsHeaders(
-              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
-              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+              Response.json({
+                results: items,
+                page: data.page,
+                total_pages: data.total_pages,
+              }),
+              {
+                "Cache-Control":
+                  "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+              },
             );
           } else if (mediaTypeParam === "tv") {
             const ep = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
@@ -665,49 +1083,85 @@ export default {
             if (!res.ok) throw new Error(`TMDB ${res.status}`);
             const data: any = await res.json();
             const items = mapTmdbResults(
-              (data.results || []).map((r: any) => ({ ...r, media_type: "tv" })),
+              (data.results || []).map((r: any) => ({
+                ...r,
+                media_type: "tv",
+              })),
               "anime",
             );
             return addCorsHeaders(
-              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
-              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+              Response.json({
+                results: items,
+                page: data.page,
+                total_pages: data.total_pages,
+              }),
+              {
+                "Cache-Control":
+                  "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+              },
             );
           } else {
             // General popular anime: fetch both TV series and movies concurrently
             const [tvRes, movieRes] = await Promise.allSettled([
               fetch(
                 `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
-                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+                {
+                  signal: AbortSignal.timeout(8000),
+                  cf: { cacheTtl: 3600, cacheEverything: true },
+                } as any,
               ),
               fetch(
                 `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
-                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+                {
+                  signal: AbortSignal.timeout(8000),
+                  cf: { cacheTtl: 3600, cacheEverything: true },
+                } as any,
               ),
             ]);
 
             if (
-              (tvRes.status !== "fulfilled" || !tvRes.value.ok) &&
-              (movieRes.status !== "fulfilled" || !movieRes.value.ok)
+              !(tvRes.status === "fulfilled" && tvRes.value.ok) &&
+              !(movieRes.status === "fulfilled" && movieRes.value.ok)
             ) {
-              throw new Error("TMDB anime feed requests failed");
+              throw new Error("TMDB anime requests failed");
             }
 
-            const tvData: any = tvRes.status === "fulfilled" && tvRes.value.ok ? await tvRes.value.json() : { results: [] };
-            const movieData: any = movieRes.status === "fulfilled" && movieRes.value.ok ? await movieRes.value.json() : { results: [] };
+            const tvData: any =
+              tvRes.status === "fulfilled" && tvRes.value.ok
+                ? await tvRes.value.json()
+                : { results: [] };
+            const movieData: any =
+              movieRes.status === "fulfilled" && movieRes.value.ok
+                ? await movieRes.value.json()
+                : { results: [] };
 
-            const rawTv = (tvData.results || []).map((r: any) => ({ ...r, media_type: "tv" }));
-            const rawMovies = (movieData.results || []).map((r: any) => ({ ...r, media_type: "movie" }));
+            const rawTv = (tvData.results || []).map((r: any) => ({
+              ...r,
+              media_type: "tv",
+            }));
+            const rawMovies = (movieData.results || []).map((r: any) => ({
+              ...r,
+              media_type: "movie",
+            }));
 
-            const merged = [...rawTv, ...rawMovies].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+            const merged = [...rawTv, ...rawMovies].sort(
+              (a, b) => (b.popularity || 0) - (a.popularity || 0),
+            );
             const items = mapTmdbResults(merged, "anime");
 
             return addCorsHeaders(
               Response.json({
                 results: items,
                 page: Number(page),
-                total_pages: Math.max(tvData.total_pages || 1, movieData.total_pages || 1),
+                total_pages: Math.max(
+                  tvData.total_pages || 1,
+                  movieData.total_pages || 1,
+                ),
               }),
-              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+              {
+                "Cache-Control":
+                  "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+              },
             );
           }
         }
@@ -915,7 +1369,9 @@ function mapTmdbResults(results: any[], hint: BrowseType) {
         genres: genreNames,
         tagline: r.tagline || undefined,
         featured: (r.vote_average || 0) >= 7.5 && !!r.backdrop_path,
-        seasons_count: r.number_of_seasons || (r.seasons?.length ? r.seasons.length : undefined),
+        seasons_count:
+          r.number_of_seasons ||
+          (r.seasons?.length ? r.seasons.length : undefined),
         seasons: r.seasons || undefined,
       };
     });

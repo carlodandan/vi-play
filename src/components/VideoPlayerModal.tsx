@@ -61,6 +61,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const {
     videoRef,
     sources,
+    failedUrls,
     activeSource,
     subtitles,
     qualityLevels,
@@ -513,6 +514,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   ) : (
                     sources.map((src) => {
                       const isCur = activeSource?.url === src.url;
+                      const hasFailed = failedUrls.includes(src.url);
                       return (
                         <button
                           key={src.url}
@@ -523,13 +525,27 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
                             isCur
                               ? "bg-purple-600/20 text-purple-300 border border-purple-500/30"
-                              : "text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                              : hasFailed
+                                ? "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                                : "text-zinc-300 hover:bg-zinc-900 hover:text-white"
                           }`}
                         >
-                          <span className="truncate">{src.label}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 ml-2">
-                            {isMp4Stream(src.url) ? "MP4" : "HLS"}
+                          <span className="truncate flex items-center gap-1.5">
+                            {hasFailed && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                            )}
+                            {src.label}
                           </span>
+                          <div className="flex items-center gap-1 ml-2">
+                            {hasFailed && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950/70 text-rose-400 border border-rose-900/50">
+                                Failed
+                              </span>
+                            )}
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+                              {isMp4Stream(src.url) ? "MP4" : "HLS"}
+                            </span>
+                          </div>
                         </button>
                       );
                     })
