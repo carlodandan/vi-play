@@ -1,45 +1,81 @@
-# VPlay Private Cloudflare Worker (Vyla Streaming Backend)
+# VPlay Private Streaming Worker (`vplay-api`)
 
-This worker is a **self-contained private streaming backend** powered directly by `@vyla-entertainment/sdk` and bound to **Cloudflare Pages**.
+The private Cloudflare Worker backend for VPlay, powered by the self-contained `@vyla-entertainment/sdk` and TMDB discovery proxies.
 
-> **Notice**: For entertainment and educational purposes only.
+> **Notice**: For educational and entertainment purposes only. Does not store or host any media files.
 
 ---
 
 ## Features
 
-- **Self-Contained**: Executes stream scrapers across 48+ providers directly inside Cloudflare Workers without requiring an external Node.js server or SQLite database.
+- **Self-Contained Streaming Backend**: Runs multi-provider video scraping directly within `workerd` (Cloudflare Workers) across 48+ sources without an external VPS or Node.js server.
 - **Server-Sent Events (SSE)**: Streams real-time progressive sources and subtitle tracks for `/movie` and `/tv`.
-- **Private Service Binding**: Configured with `workers_dev: false` — never exposed publicly on the internet; invoked securely by Cloudflare Pages via `env.VYLA_WORKER`.
-- **HLS & MP4 Proxy**: Built-in CORS handling and playlist URI rewriting (`/api?url=...`).
+- **Live TMDB Discovery Engine**: Proxies trending, popular, multi-search, and details queries directly to TMDB with Japanese anime filtering.
+- **Edge Caching & Performance**: Integrates Cloudflare CDN caching (`cf: { cacheTtl, cacheEverything }`) and standard `Cache-Control` headers for sub-10ms repeat queries.
+- **Abuse Protection**: Sliding-window IP rate limiter (60 discovery req/min, 15 streams/min) and stateless cryptographic HMAC session token signing.
+- **Private Service Binding**: Deployed with `workers_dev: false` — never exposed publicly on the internet; invoked securely by Cloudflare Pages Functions via `env.VYLA_WORKER`.
+- **HLS / MP4 Stream Proxy**: Handles CORS stripping, playlist URI rewriting, and segment piping (`/api?url=...`).
 
 ---
 
-## Configuration
+## Package Management
 
-### Environment Variables & Secrets
+The worker uses **pnpm** (specifically pinned to `pnpm@10.11.1` to match Cloudflare's build environment).
+
+```bash
+cd worker
+pnpm install
+```
+
+> **Note**: The `@vyla-entertainment/sdk` is automatically patched on install using pnpm's native `patchedDependencies` feature configured in `worker/pnpm-workspace.yaml` (`patches/@vyla-entertainment__sdk.patch`). This resolves runtime timer restrictions in the Cloudflare Workers `workerd` environment.
+
+---
+
+## Configuration & Secrets
+
 Set your TMDB API Key in secrets (or `.dev.vars` for local dev):
+
 ```bash
+# In production
 npx wrangler secret put TMDB_API_KEY
+
+# Optional session secret (fallback defaults to internal edge salt)
+npx wrangler secret put SESSION_SECRET
 ```
 
-### Local Development
-Run wrangler dev on port `8787`:
+For local testing, place variables in `worker/.dev.vars`:
+```ini
+TMDB_API_KEY=b7a308c99dc64382f38b48c737424b75
+```
+
+---
+
+## Local Development
+ 
+Run the worker locally on port `8787`:
+ 
 ```bash
-pnpm run dev
-# or: npx wrangler dev --port 8787
+cd worker
+pnpm dev
 ```
-
-### Production Deployment
+ 
+The worker starts at `http://127.0.0.1:8787`. The VPlay Vite frontend automatically connects to this port in development mode.
+ 
+---
+ 
+## Deployment
+ 
+Deploy directly to your Cloudflare account:
+ 
 ```bash
-npx wrangler deploy
+cd worker
+pnpm run deploy
 ```
 
-Once deployed, Cloudflare Pages calls this worker internally via the `[[services]]` binding in the root `wrangler.toml`:
+The worker deploys with `workers_dev = false`. Cloudflare Pages connects to it through the Service Binding configured in the root `wrangler.toml`:
+
 ```toml
 [[services]]
 binding = "VYLA_WORKER"
-service = "vplay-vyla-proxy"
+service = "vplay-api"
 ```
-No worker URLs are hardcoded in the frontend.
-
