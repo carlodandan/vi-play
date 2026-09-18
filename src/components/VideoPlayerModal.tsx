@@ -49,6 +49,10 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const [selectedSubIndex, setSelectedSubIndex] = useState<number>(-1); // -1 = off
   const controlsTimeoutRef = useRef<number | null>(null);
 
+  const isSeries = item.type === "tv" || item.type === "anime";
+  const currentSeason = isSeries ? (season ?? 1) : undefined;
+  const currentEpisode = isSeries ? (episode ?? 1) : undefined;
+
   const {
     videoRef,
     sources,
@@ -65,8 +69,9 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     retry,
   } = useStreamPlayer({
     tmdbId: item.id,
-    season,
-    episode,
+    mediaType: item.type,
+    season: currentSeason,
+    episode: currentEpisode,
   });
 
   // Handle controls auto-hide
@@ -154,7 +159,6 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   };
 
   // Next / Previous episode calculation
-  const isSeries = item.type === "tv" || item.type === "anime";
   let hasPrevEpisode = false;
   let hasNextEpisode = false;
   let prevEpNumber = 0;
@@ -162,22 +166,24 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
   if (
     isSeries &&
-    season !== undefined &&
-    episode !== undefined &&
+    currentSeason !== undefined &&
+    currentEpisode !== undefined &&
     item.seasons
   ) {
-    const currentSeason = item.seasons.find((s) => s.season_number === season);
-    if (currentSeason?.episodes) {
-      const epIndex = currentSeason.episodes.findIndex(
-        (e) => e.episode_number === episode,
+    const seasonObj = item.seasons.find(
+      (s) => s.season_number === currentSeason,
+    );
+    if (seasonObj?.episodes) {
+      const epIndex = seasonObj.episodes.findIndex(
+        (e) => e.episode_number === currentEpisode,
       );
       if (epIndex > 0) {
         hasPrevEpisode = true;
-        prevEpNumber = currentSeason.episodes[epIndex - 1].episode_number;
+        prevEpNumber = seasonObj.episodes[epIndex - 1].episode_number;
       }
-      if (epIndex < currentSeason.episodes.length - 1) {
+      if (epIndex < seasonObj.episodes.length - 1) {
         hasNextEpisode = true;
-        nextEpNumber = currentSeason.episodes[epIndex + 1].episode_number;
+        nextEpNumber = seasonObj.episodes[epIndex + 1].episode_number;
       }
     }
   }
@@ -289,9 +295,9 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             <h2 className="text-sm sm:text-base font-bold text-white truncate">
               {item.title}
             </h2>
-            {isSeries && season !== undefined && episode !== undefined && (
-              <p className="text-xs text-purple-400 font-medium">
-                Season {season} • Episode {episode}
+            {isSeries && (
+              <p className="text-xs text-rose-400 font-medium">
+                Season {currentSeason} • Episode {currentEpisode}
               </p>
             )}
           </div>

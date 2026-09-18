@@ -651,10 +651,10 @@ export default {
         return addCorsHeaders(
           Response.json({ error: "Missing id" }, { status: 400 }),
         );
-      const endpoint =
-        type === "tv"
-          ? `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbKey}&append_to_response=seasons`
-          : `https://api.themoviedb.org/3/movie/${id}?api_key=${tmdbKey}`;
+      const isTv = type === "tv" || type === "anime";
+      const endpoint = isTv
+        ? `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbKey}&append_to_response=seasons`
+        : `https://api.themoviedb.org/3/movie/${id}?api_key=${tmdbKey}`;
       try {
         const res = await fetch(endpoint, {
           signal: AbortSignal.timeout(8000),

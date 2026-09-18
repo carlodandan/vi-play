@@ -76,9 +76,9 @@ Real-time media resolvers use **Server-Sent Events (`text/event-stream`)** to st
 * **Query Parameters**:
   | Parameter | Type | Required | Description |
   |---|---|---|---|
-  | `id` | `number` | Yes | The TMDB TV Show ID. |
-  | `season` | `number` | Yes | Season number (1-indexed). |
-  | `episode` | `number` | Yes | Episode number (1-indexed). |
+  | `id` | `number` | Yes | The TMDB TV Show / Anime ID (e.g. `209867` for Solo Leveling). |
+  | `season` | `number` | No | Season number (1-indexed, default: `1`). |
+  | `episode` | `number` | No | Episode number (1-indexed, default: `1`). |
 * **Headers**: `Accept: text/event-stream`
 
 ### SSE Event Stream Protocol
@@ -259,3 +259,20 @@ Retry-After: 30
 * `404 Not Found`: Endpoint or requested media not found.
 * `429 Too Many Requests`: IP rate limit exceeded (Retry after header specified).
 * `502 Bad Gateway`: Upstream TMDB or scraper provider connectivity failure.
+
+---
+
+## 7. Client-Side SPA Routes & Deep Links
+
+VPlay integrates `react-router-dom` with synchronized URL paths and bookmarkable deep links:
+
+| Path Pattern | View | Behavior |
+|---|---|---|
+| `/` | Home | Renders Hero Carousel & all shelves (Trending, Anime, Movies, TV, Sci-Fi). |
+| `/movies` | Category Grid | Filters live catalog for Movies. |
+| `/tv` | Category Grid | Filters live catalog for TV Series. |
+| `/anime` | Category Grid | Filters live catalog for Japanese Anime. |
+| `/watchlist` | Watchlist Grid | Displays user bookmarks stored in local storage. |
+| `/:type/:id` | Detail Modal | Resolves media details and displays synopsis, cast, and episode list (`/movie/693134`, `/tv/209867`). |
+| `/watch/:type/:id` | Video Player | Launches full-screen streaming player (movies or series defaulting to S1 E1). |
+| `/watch/:type/:id/:season/:episode` | Video Player | Launches streaming player at specific season and episode (`/watch/tv/209867/1/2`). |

@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { DisclaimerBanner } from "./components/DisclaimerBanner.tsx";
 import { Navbar, type NavCategory } from "./components/Navbar.tsx";
 import { HeroBanner } from "./components/HeroBanner.tsx";
@@ -16,6 +17,7 @@ import {
   getWatchlistIds,
   toggleWatchlist,
   fetchShelf,
+  fetchMediaDetail,
 } from "./services/tmdbApi.ts";
 import { Film, Tv, Sparkles, Bookmark, Flame, Compass } from "lucide-react";
 
@@ -23,6 +25,21 @@ interface ActivePlayerState {
   item: MediaItem;
   season?: number;
   episode?: number;
+}
+
+function getCategoryPath(cat: NavCategory): string {
+  switch (cat) {
+    case "movie":
+      return "/movies";
+    case "tv":
+      return "/tv";
+    case "anime":
+      return "/anime";
+    case "watchlist":
+      return "/watchlist";
+    default:
+      return "/";
+  }
 }
 
 // ── Initial curated fallback shelves (shown instantly before live data loads) ──
@@ -43,6 +60,9 @@ const CURATED_SCIFI = CURATED_MEDIA.filter((m) =>
 const CURATED_FEATURED = CURATED_MEDIA.filter((m) => m.featured);
 
 export function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [currentCategory, setCurrentCategory] = useState<NavCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -184,10 +204,137 @@ export function App() {
     return [];
   }, [currentCategory]);
 
+  const activePlayerRef = useRef(activePlayer);
+  const detailModalItemRef = useRef(detailModalItem);
+
+  useEffect(() => {
+    activePlayerRef.current = activePlayer;
+  }, [activePlayer]);
+
+  useEffect(() => {
+    detailModalItemRef.current = detailModalItem;
+  }, [detailModalItem]);
+
+  // ── Helper to find any media item from existing state/cache ───────────────
+  const findKnownItem = useCallback(
+    (id: number): MediaItem | undefined => {
+      return (
+        mediaList.find((m) => m.id === id) ||
+        top10List.find((m) => m.id === id) ||
+        animeList.find((m) => m.id === id) ||
+        moviesList.find((m) => m.id === id) ||
+        tvList.find((m) => m.id === id) ||
+        sciFiList.find((m) => m.id === id) ||
+        heroItems.find((m) => m.id === id) ||
+        CURATED_MEDIA.find((m) => m.id === id)
+      );
+    },
+    [mediaList, top10List, animeList, moviesList, tvList, sciFiList, heroItems],
+  );
+
+  // ── URL Synchronization & Deep Linking ─────────────────────────────────────
+  useEffect(() => {
+    const path = location.pathname;
+
+    // 1. Watch route: /watch/:type/:id/:season?/:episode?
+    const watchMatch = path.match(
+      /^\/watch\/(movie|tv|anime)\/(\d+)(?:\/(\d+)\/(\d+))?$/,
+    );
+    if (watchMatch) {
+      const type = watchMatch[1] as "movie" | "tv" | "anime";
+      const id = Number(watchMatch[2]);
+      const s = watchMatch[3]
+        ? Number(watchMatch[3])
+        : type !== "movie"
+          ? 1
+          : undefined;
+      const e = watchMatch[4]
+        ? Number(watchMatch[4])
+        : type !== "movie"
+          ? 1
+          : undefined;
+
+      const current = activePlayerRef.current;
+      if (
+        current?.item.id === id &&
+        current.season === s &&
+        current.episode === e
+      ) {
+        return;
+      }
+
+      setDetailModalItem(null);
+      const known = findKnownItem(id);
+      if (known) {
+        setActivePlayer({ item: known, season: s, episode: e });
+      } else {
+        fetchMediaDetail(id, type).then((fetched) => {
+          if (fetched) {
+            setActivePlayer({ item: fetched, season: s, episode: e });
+          }
+        });
+      }
+      return;
+    }
+
+    // 2. Detail route: /:type/:id
+    const detailMatch = path.match(/^\/(movie|tv|anime)\/(\d+)$/);
+    if (detailMatch) {
+      const type = detailMatch[1] as "movie" | "tv" | "anime";
+      const id = Number(detailMatch[2]);
+
+      setActivePlayer(null);
+      if (detailModalItemRef.current?.id === id) {
+        return;
+      }
+
+      const known = findKnownItem(id);
+      if (known) {
+        setDetailModalItem(known);
+      } else {
+        fetchMediaDetail(id, type).then((fetched) => {
+          if (fetched) {
+            setDetailModalItem(fetched);
+          }
+        });
+      }
+      return;
+    }
+
+    // 3. Category / standard routes
+    setActivePlayer(null);
+    setDetailModalItem(null);
+
+    if (path === "/movies" || path === "/movie") {
+      setCurrentCategory("movie");
+    } else if (path === "/tv") {
+      setCurrentCategory("tv");
+    } else if (path === "/anime") {
+      setCurrentCategory("anime");
+    } else if (path === "/watchlist") {
+      setCurrentCategory("watchlist");
+    } else if (path === "/") {
+      setCurrentCategory("all");
+    }
+  }, [location.pathname, findKnownItem]);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleToggleWatchlist = (id: number, item?: MediaItem) => {
     toggleWatchlist(id, item);
     setWatchlistIds(getWatchlistIds());
+  };
+
+  const handleSelectCategory = (cat: NavCategory) => {
+    setCurrentCategory(cat);
+    setSelectedGenre("All");
+    setSearchQuery("");
+    navigate(getCategoryPath(cat));
+  };
+
+  const handleOpenDetails = (item: MediaItem) => {
+    const type =
+      item.type === "movie" ? "movie" : item.type === "anime" ? "anime" : "tv";
+    navigate(`/${type}/${item.id}`);
   };
 
   const handlePlayMedia = (
@@ -195,19 +342,35 @@ export function App() {
     season?: number,
     episode?: number,
   ) => {
+    const isSeries = item.type === "tv" || item.type === "anime";
+    const s = isSeries ? (season ?? 1) : undefined;
+    const e = isSeries ? (episode ?? 1) : undefined;
+    saveWatchHistory(item, s, e);
     setDetailModalItem(null);
-    saveWatchHistory(item, season, episode);
-    setActivePlayer({ item, season, episode });
+    if (isSeries) {
+      navigate(`/watch/${item.type}/${item.id}/${s}/${e}`);
+    } else {
+      navigate(`/watch/movie/${item.id}`);
+    }
   };
 
   const handleNavigateEpisode = (newSeason: number, newEpisode: number) => {
     if (activePlayer) {
-      setActivePlayer({
-        ...activePlayer,
-        season: newSeason,
-        episode: newEpisode,
-      });
+      saveWatchHistory(activePlayer.item, newSeason, newEpisode);
+      navigate(
+        `/watch/${activePlayer.item.type}/${activePlayer.item.id}/${newSeason}/${newEpisode}`,
+      );
     }
+  };
+
+  const handleCloseModal = () => {
+    setDetailModalItem(null);
+    navigate(getCategoryPath(currentCategory));
+  };
+
+  const handleClosePlayer = () => {
+    setActivePlayer(null);
+    navigate(getCategoryPath(currentCategory));
   };
 
   return (
@@ -221,10 +384,7 @@ export function App() {
       {/* Main Glass Navbar */}
       <Navbar
         currentCategory={currentCategory}
-        onSelectCategory={(cat) => {
-          setCurrentCategory(cat);
-          setSelectedGenre("All");
-        }}
+        onSelectCategory={handleSelectCategory}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         watchlistCount={watchlistIds.length}
@@ -239,7 +399,7 @@ export function App() {
               title={`Search Results for "${searchQuery}"`}
               items={mediaList}
               onPlay={handlePlayMedia}
-              onSelectItem={setDetailModalItem}
+              onSelectItem={handleOpenDetails}
               watchlistIds={watchlistIds}
               onToggleWatchlist={handleToggleWatchlist}
             />
@@ -275,7 +435,7 @@ export function App() {
                   personal streaming library.
                 </p>
                 <button
-                  onClick={() => setCurrentCategory("all")}
+                  onClick={() => handleSelectCategory("all")}
                   className="px-6 py-2.5 rounded-xl font-semibold text-sm transition cursor-pointer text-white"
                   style={{
                     background: "var(--color-accent)",
@@ -296,7 +456,7 @@ export function App() {
                 }
                 items={mediaList}
                 onPlay={handlePlayMedia}
-                onSelectItem={setDetailModalItem}
+                onSelectItem={handleOpenDetails}
                 watchlistIds={watchlistIds}
                 onToggleWatchlist={handleToggleWatchlist}
               />
@@ -310,7 +470,7 @@ export function App() {
               <HeroBanner
                 items={categoryHeroItems}
                 onPlay={handlePlayMedia}
-                onOpenDetails={setDetailModalItem}
+                onOpenDetails={handleOpenDetails}
                 watchlistIds={watchlistIds}
                 onToggleWatchlist={handleToggleWatchlist}
               />
@@ -321,7 +481,7 @@ export function App() {
               <div className="space-y-6">
                 <ContinueWatchingRow
                   onPlay={handlePlayMedia}
-                  onSelectItem={setDetailModalItem}
+                  onSelectItem={handleOpenDetails}
                 />
 
                 <MediaRow
@@ -331,7 +491,7 @@ export function App() {
                   showRank={true}
                   items={top10List}
                   onPlay={handlePlayMedia}
-                  onSelectItem={setDetailModalItem}
+                  onSelectItem={handleOpenDetails}
                   watchlistIds={watchlistIds}
                   onToggleWatchlist={handleToggleWatchlist}
                 />
@@ -342,10 +502,10 @@ export function App() {
                   icon={<Sparkles className="w-5 h-5 text-rose-400" />}
                   items={animeList}
                   onPlay={handlePlayMedia}
-                  onSelectItem={setDetailModalItem}
+                  onSelectItem={handleOpenDetails}
                   watchlistIds={watchlistIds}
                   onToggleWatchlist={handleToggleWatchlist}
-                  onSeeAll={() => setCurrentCategory("anime")}
+                  onSeeAll={() => handleSelectCategory("anime")}
                 />
 
                 <MediaRow
@@ -354,10 +514,10 @@ export function App() {
                   icon={<Film className="w-5 h-5 text-purple-400" />}
                   items={moviesList}
                   onPlay={handlePlayMedia}
-                  onSelectItem={setDetailModalItem}
+                  onSelectItem={handleOpenDetails}
                   watchlistIds={watchlistIds}
                   onToggleWatchlist={handleToggleWatchlist}
-                  onSeeAll={() => setCurrentCategory("movie")}
+                  onSeeAll={() => handleSelectCategory("movie")}
                 />
 
                 <MediaRow
@@ -366,10 +526,10 @@ export function App() {
                   icon={<Tv className="w-5 h-5 text-indigo-400" />}
                   items={tvList}
                   onPlay={handlePlayMedia}
-                  onSelectItem={setDetailModalItem}
+                  onSelectItem={handleOpenDetails}
                   watchlistIds={watchlistIds}
                   onToggleWatchlist={handleToggleWatchlist}
-                  onSeeAll={() => setCurrentCategory("tv")}
+                  onSeeAll={() => handleSelectCategory("tv")}
                 />
 
                 <MediaRow
@@ -378,7 +538,7 @@ export function App() {
                   icon={<Compass className="w-5 h-5 text-cyan-400" />}
                   items={sciFiList}
                   onPlay={handlePlayMedia}
-                  onSelectItem={setDetailModalItem}
+                  onSelectItem={handleOpenDetails}
                   watchlistIds={watchlistIds}
                   onToggleWatchlist={handleToggleWatchlist}
                 />
@@ -392,7 +552,7 @@ export function App() {
                 icon={<Film className="w-5 h-5 text-purple-400" />}
                 items={mediaList}
                 onPlay={handlePlayMedia}
-                onSelectItem={setDetailModalItem}
+                onSelectItem={handleOpenDetails}
                 watchlistIds={watchlistIds}
                 onToggleWatchlist={handleToggleWatchlist}
                 genres={currentGenres}
@@ -406,7 +566,7 @@ export function App() {
                 icon={<Tv className="w-5 h-5 text-indigo-400" />}
                 items={mediaList}
                 onPlay={handlePlayMedia}
-                onSelectItem={setDetailModalItem}
+                onSelectItem={handleOpenDetails}
                 watchlistIds={watchlistIds}
                 onToggleWatchlist={handleToggleWatchlist}
                 genres={currentGenres}
@@ -420,7 +580,7 @@ export function App() {
                 icon={<Sparkles className="w-5 h-5 text-rose-400" />}
                 items={mediaList}
                 onPlay={handlePlayMedia}
-                onSelectItem={setDetailModalItem}
+                onSelectItem={handleOpenDetails}
                 watchlistIds={watchlistIds}
                 onToggleWatchlist={handleToggleWatchlist}
                 genres={currentGenres}
@@ -435,7 +595,7 @@ export function App() {
       {/* Detail Modal */}
       <MediaModal
         item={detailModalItem}
-        onClose={() => setDetailModalItem(null)}
+        onClose={handleCloseModal}
         onPlay={handlePlayMedia}
         isWatchlisted={
           detailModalItem ? watchlistIds.includes(detailModalItem.id) : false
@@ -450,7 +610,7 @@ export function App() {
           item={activePlayer.item}
           season={activePlayer.season}
           episode={activePlayer.episode}
-          onClose={() => setActivePlayer(null)}
+          onClose={handleClosePlayer}
           onNavigateEpisode={handleNavigateEpisode}
         />
       )}

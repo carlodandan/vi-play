@@ -103,6 +103,8 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                         currentSeason.season_number,
                         currentSeason.episodes[0].episode_number,
                       );
+                    } else if (isSeries) {
+                      onPlay(item, 1, 1);
                     } else {
                       onPlay(item);
                     }

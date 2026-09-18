@@ -23,18 +23,23 @@ function saveStoredWatchlistItems(items: Record<number, MediaItem>): void {
   }
 }
 
-async function fetchMediaDetail(
+export async function fetchMediaDetail(
   id: number,
-  type: "movie" | "tv",
+  type: "movie" | "tv" | "anime",
 ): Promise<MediaItem | null> {
   try {
     const base = API_BASE_URL;
-    const res = await fetch(`${base}/api/details?type=${type}&id=${id}`, {
+    const queryType = type === "anime" ? "tv" : type;
+    const res = await fetch(`${base}/api/details?type=${queryType}&id=${id}`, {
       signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data?.result || null;
+    if (!data?.result) return null;
+    return {
+      ...data.result,
+      type: type === "anime" ? "anime" : data.result.type,
+    };
   } catch {
     return null;
   }
