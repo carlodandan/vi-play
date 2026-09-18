@@ -5,6 +5,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 693134,
     title: "Dune: Part Two",
     type: "movie",
+    media_type: "movie",
     overview:
       "Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a path of revenge against the conspirators who destroyed his family.",
     poster_path:
@@ -22,6 +23,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 157336,
     title: "Interstellar",
     type: "movie",
+    media_type: "movie",
     overview:
       "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
     poster_path:
@@ -40,6 +42,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "Attack on Titan (Shingeki no Kyojin)",
     original_title: "進撃の巨人",
     type: "anime",
+    media_type: "tv",
     overview:
       "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
     poster_path:
@@ -159,6 +162,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "Demon Slayer: Kimetsu no Yaiba",
     original_title: "鬼滅の刃",
     type: "anime",
+    media_type: "tv",
     overview:
       "It is the Taisho Period in Japan. Tanjiro, a kindhearted boy who sells charcoal for a living, finds his family slaughtered by a demon. To make matters worse, his younger sister Nezuko has been transformed into a demon herself.",
     poster_path:
@@ -228,6 +232,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "Jujutsu Kaisen",
     original_title: "呪術廻戦",
     type: "anime",
+    media_type: "tv",
     overview:
       "Yuji Itadori is a boy with tremendous physical strength, though he lives a completely ordinary high school life. One day, to save a classmate who has been attacked by curses, he eats the finger of Ryomen Sukuna, taking the curse into his own soul.",
     poster_path:
@@ -290,6 +295,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "Solo Leveling",
     original_title: "俺だけレベルアップな件",
     type: "anime",
+    media_type: "tv",
     overview:
       "They say whatever doesn’t kill you makes you stronger, but that’s not the case for the world’s weakest hunter, Sung Jinwoo. After being brutally slaughtered by monsters in a high-ranking dungeon, Jinwoo came back with the System, a program only he can see.",
     poster_path:
@@ -330,6 +336,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 1396,
     title: "Breaking Bad",
     type: "tv",
+    media_type: "tv",
     overview:
       "Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of two years left to live. He chooses to enter the dangerous world of drugs and crime promising his family financial security.",
     poster_path:
@@ -418,6 +425,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 1399,
     title: "Game of Thrones",
     type: "tv",
+    media_type: "tv",
     overview:
       "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war, while an ancient enemy wakes once again in the far north.",
     poster_path:
@@ -466,6 +474,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 94605,
     title: "Arcane",
     type: "anime",
+    media_type: "tv",
     overview:
       "Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and incompatible convictions.",
     poster_path:
@@ -514,6 +523,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 27205,
     title: "Inception",
     type: "movie",
+    media_type: "movie",
     overview:
       "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets, is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
     poster_path:
@@ -531,6 +541,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 550,
     title: "Fight Club",
     type: "movie",
+    media_type: "movie",
     overview:
       'A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground "fight clubs" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.',
     poster_path:
@@ -548,6 +559,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 155,
     title: "The Dark Knight",
     type: "movie",
+    media_type: "movie",
     overview:
       "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
     poster_path:
@@ -565,6 +577,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 324857,
     title: "Spider-Man: Into the Spider-Verse",
     type: "movie",
+    media_type: "movie",
     overview:
       "Struggling to find his place in the world while juggling school and family, Brooklyn teenager Miles Morales is bitten by a radioactive spider and develops superpowers. When the Kingpin opens a multiverse portal, alternate Spider-heroes cross over.",
     poster_path:
@@ -583,6 +596,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "Spirited Away (Sen to Chihiro no Kamikakushi)",
     original_title: "千と千尋の神隠し",
     type: "anime",
+    media_type: "movie",
     overview:
       "A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family.",
     poster_path:
@@ -601,6 +615,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "Your Name. (Kimi no Na wa.)",
     original_title: "君の名は。",
     type: "anime",
+    media_type: "movie",
     overview:
       "High schoolers Mitsuha and Taki are complete strangers living separate lives in Tokyo and the rural mountains. But suddenly, they begin swapping bodies intermittently.",
     poster_path:
@@ -618,6 +633,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     id: 66732,
     title: "Stranger Things",
     type: "tv",
+    media_type: "tv",
     overview:
       "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.",
     poster_path:
@@ -660,6 +676,7 @@ export const CURATED_MEDIA: MediaItem[] = [
     title: "One Piece",
     original_title: "ワンピース",
     type: "anime",
+    media_type: "tv",
     overview:
       'Years ago, the fearsome Pirate King, Gol D. Roger was executed leaving behind a huge cache of riches and the famed "One Piece". Monkey D. Luffy sets out to sea to form the Straw Hat Pirates and become the new King of the Pirates!',
     poster_path:

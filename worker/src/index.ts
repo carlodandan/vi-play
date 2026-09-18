@@ -521,19 +521,82 @@ export default {
       });
     }
 
-    // 8. TMDB Discovery — /api/trending?type=all|movie|tv|anime&page=1
+    // 8. TMDB Discovery — /api/trending?type=all|movie|tv|anime&media_type=movie|tv&page=1
     if (url.pathname === "/api/trending") {
       const type = url.searchParams.get("type") || "all";
+      const mediaTypeParam = url.searchParams.get("media_type");
       const page = url.searchParams.get("page") || "1";
-      let endpoint: string;
-      if (type === "anime") {
-        endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
-      } else {
-        const tmdbType =
-          type === "movie" ? "movie" : type === "tv" ? "tv" : "all";
-        endpoint = `https://api.themoviedb.org/3/trending/${tmdbType}/week?api_key=${tmdbKey}&page=${page}`;
-      }
+
       try {
+        if (type === "anime") {
+          if (mediaTypeParam === "movie") {
+            const ep = `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
+            const res = await fetch(ep, {
+              signal: AbortSignal.timeout(8000),
+              cf: { cacheTtl: 3600, cacheEverything: true },
+            } as any);
+            if (!res.ok) throw new Error(`TMDB ${res.status}`);
+            const data: any = await res.json();
+            const items = mapTmdbResults(
+              (data.results || []).map((r: any) => ({ ...r, media_type: "movie" })),
+              "anime",
+            );
+            return addCorsHeaders(
+              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
+              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+            );
+          } else if (mediaTypeParam === "tv") {
+            const ep = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
+            const res = await fetch(ep, {
+              signal: AbortSignal.timeout(8000),
+              cf: { cacheTtl: 3600, cacheEverything: true },
+            } as any);
+            if (!res.ok) throw new Error(`TMDB ${res.status}`);
+            const data: any = await res.json();
+            const items = mapTmdbResults(
+              (data.results || []).map((r: any) => ({ ...r, media_type: "tv" })),
+              "anime",
+            );
+            return addCorsHeaders(
+              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
+              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+            );
+          } else {
+            // Interleave both anime TV series and anime feature films
+            const [tvRes, movieRes] = await Promise.allSettled([
+              fetch(
+                `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
+                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+              ),
+              fetch(
+                `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
+                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+              ),
+            ]);
+
+            const tvData: any = tvRes.status === "fulfilled" && tvRes.value.ok ? await tvRes.value.json() : { results: [] };
+            const movieData: any = movieRes.status === "fulfilled" && movieRes.value.ok ? await movieRes.value.json() : { results: [] };
+
+            const rawTv = (tvData.results || []).map((r: any) => ({ ...r, media_type: "tv" }));
+            const rawMovies = (movieData.results || []).map((r: any) => ({ ...r, media_type: "movie" }));
+
+            // Merge and sort by popularity
+            const merged = [...rawTv, ...rawMovies].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+            const items = mapTmdbResults(merged, "anime");
+
+            return addCorsHeaders(
+              Response.json({
+                results: items,
+                page: Number(page),
+                total_pages: Math.max(tvData.total_pages || 1, movieData.total_pages || 1),
+              }),
+              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+            );
+          }
+        }
+
+        const tmdbType = type === "movie" ? "movie" : type === "tv" ? "tv" : "all";
+        const endpoint = `https://api.themoviedb.org/3/trending/${tmdbType}/week?api_key=${tmdbKey}&page=${page}`;
         const res = await fetch(endpoint, {
           signal: AbortSignal.timeout(8000),
           cf: { cacheTtl: 3600, cacheEverything: true },
@@ -562,19 +625,86 @@ export default {
       }
     }
 
-    // 9. TMDB Popular — /api/popular?type=movie|tv|anime&page=1
+    // 9. TMDB Popular — /api/popular?type=movie|tv|anime&media_type=movie|tv&page=1
     if (url.pathname === "/api/popular") {
       const type = url.searchParams.get("type") || "movie";
+      const mediaTypeParam = url.searchParams.get("media_type");
       const page = url.searchParams.get("page") || "1";
-      let endpoint: string;
-      if (type === "anime") {
-        endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
-      } else if (type === "tv") {
-        endpoint = `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbKey}&page=${page}`;
-      } else {
-        endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbKey}&page=${page}`;
-      }
+
       try {
+        if (type === "anime") {
+          if (mediaTypeParam === "movie") {
+            const ep = `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
+            const res = await fetch(ep, {
+              signal: AbortSignal.timeout(8000),
+              cf: { cacheTtl: 3600, cacheEverything: true },
+            } as any);
+            if (!res.ok) throw new Error(`TMDB ${res.status}`);
+            const data: any = await res.json();
+            const items = mapTmdbResults(
+              (data.results || []).map((r: any) => ({ ...r, media_type: "movie" })),
+              "anime",
+            );
+            return addCorsHeaders(
+              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
+              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+            );
+          } else if (mediaTypeParam === "tv") {
+            const ep = `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`;
+            const res = await fetch(ep, {
+              signal: AbortSignal.timeout(8000),
+              cf: { cacheTtl: 3600, cacheEverything: true },
+            } as any);
+            if (!res.ok) throw new Error(`TMDB ${res.status}`);
+            const data: any = await res.json();
+            const items = mapTmdbResults(
+              (data.results || []).map((r: any) => ({ ...r, media_type: "tv" })),
+              "anime",
+            );
+            return addCorsHeaders(
+              Response.json({ results: items, page: data.page, total_pages: data.total_pages }),
+              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+            );
+          } else {
+            // General popular anime: fetch both TV series and movies concurrently
+            const [tvRes, movieRes] = await Promise.allSettled([
+              fetch(
+                `https://api.themoviedb.org/3/discover/tv?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
+                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+              ),
+              fetch(
+                `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc&page=${page}`,
+                { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 3600, cacheEverything: true } } as any,
+              ),
+            ]);
+
+            const tvData: any = tvRes.status === "fulfilled" && tvRes.value.ok ? await tvRes.value.json() : { results: [] };
+            const movieData: any = movieRes.status === "fulfilled" && movieRes.value.ok ? await movieRes.value.json() : { results: [] };
+
+            const rawTv = (tvData.results || []).map((r: any) => ({ ...r, media_type: "tv" }));
+            const rawMovies = (movieData.results || []).map((r: any) => ({ ...r, media_type: "movie" }));
+
+            const merged = [...rawTv, ...rawMovies].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+            const items = mapTmdbResults(merged, "anime");
+
+            return addCorsHeaders(
+              Response.json({
+                results: items,
+                page: Number(page),
+                total_pages: Math.max(tvData.total_pages || 1, movieData.total_pages || 1),
+              }),
+              { "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400" },
+            );
+          }
+        }
+
+        let endpoint: string;
+        if (type === "tv") {
+          endpoint = `https://api.themoviedb.org/3/tv/popular?api_key=${tmdbKey}&page=${page}`;
+        } else {
+          endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${tmdbKey}&page=${page}`;
+        }
+
         const res = await fetch(endpoint, {
           signal: AbortSignal.timeout(8000),
           cf: { cacheTtl: 3600, cacheEverything: true },
@@ -643,27 +773,58 @@ export default {
       }
     }
 
-    // 11. TMDB Details — /api/details?type=movie|tv&id=...
+    // 11. TMDB Details — /api/details?type=movie|tv|anime&media_type=movie|tv&id=...
     if (url.pathname === "/api/details") {
       const type = url.searchParams.get("type") || "movie";
+      const mediaTypeParam = url.searchParams.get("media_type");
       const id = url.searchParams.get("id") || "";
       if (!id)
         return addCorsHeaders(
           Response.json({ error: "Missing id" }, { status: 400 }),
         );
-      const isTv = type === "tv" || type === "anime";
-      const endpoint = isTv
-        ? `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbKey}&append_to_response=seasons`
-        : `https://api.themoviedb.org/3/movie/${id}?api_key=${tmdbKey}`;
-      try {
-        const res = await fetch(endpoint, {
+
+      const fetchTmdb = async (entity: "movie" | "tv") => {
+        const ep =
+          entity === "tv"
+            ? `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbKey}&append_to_response=seasons`
+            : `https://api.themoviedb.org/3/movie/${id}?api_key=${tmdbKey}`;
+        const res = await fetch(ep, {
           signal: AbortSignal.timeout(8000),
           cf: { cacheTtl: 86400, cacheEverything: true },
         } as any);
-        if (!res.ok) throw new Error(`TMDB ${res.status}`);
+        if (!res.ok) return null;
         const data: any = await res.json();
+        return { data, entity };
+      };
+
+      try {
+        let tmdbRes: { data: any; entity: "movie" | "tv" } | null = null;
+
+        // 1. Explicit media_type parameter takes highest priority
+        if (mediaTypeParam === "movie" || mediaTypeParam === "tv") {
+          tmdbRes = await fetchTmdb(mediaTypeParam);
+        } else if (type === "tv") {
+          tmdbRes = await fetchTmdb("tv");
+        } else if (type === "movie") {
+          tmdbRes = await fetchTmdb("movie");
+        }
+
+        // 2. If type === "anime" or initial query returned 404/not found, try fallback
+        if (!tmdbRes) {
+          // Try movie first (covers anime films like Spirited Away, Your Name)
+          tmdbRes = await fetchTmdb("movie");
+          // Fall back to tv (covers anime series like Attack on Titan, Solo Leveling)
+          if (!tmdbRes) {
+            tmdbRes = await fetchTmdb("tv");
+          }
+        }
+
+        if (!tmdbRes) {
+          throw new Error(`TMDB item not found for ID ${id}`);
+        }
+
         const items = mapTmdbResults(
-          [{ ...data, media_type: type }],
+          [{ ...tmdbRes.data, media_type: tmdbRes.entity }],
           type as any,
         );
         return addCorsHeaders(Response.json({ result: items[0] || null }), {
@@ -694,9 +855,14 @@ function mapTmdbResults(results: any[], hint: BrowseType) {
   return results
     .filter((r: any) => r.poster_path) // skip items with no image
     .map((r: any) => {
-      const mediaType: string =
-        r.media_type || (r.first_air_date !== undefined ? "tv" : "movie");
-      const isMovie = mediaType === "movie";
+      const isTv =
+        r.media_type === "tv" ||
+        r.first_air_date !== undefined ||
+        r.number_of_seasons !== undefined ||
+        Boolean(r.seasons?.length);
+      const isMovie = !isTv;
+      const media_type: "movie" | "tv" = isMovie ? "movie" : "tv";
+
       const isAnime =
         hint === "anime" ||
         (r.genre_ids?.includes(16) &&
@@ -718,6 +884,7 @@ function mapTmdbResults(results: any[], hint: BrowseType) {
         title: r.title || r.name || "Untitled",
         original_title: r.original_title || r.original_name || undefined,
         type,
+        media_type,
         overview: r.overview || "No synopsis available.",
         poster_path: `https://image.tmdb.org/t/p/w500${r.poster_path}`,
         backdrop_path: r.backdrop_path
@@ -729,7 +896,8 @@ function mapTmdbResults(results: any[], hint: BrowseType) {
         genres: genreNames,
         tagline: r.tagline || undefined,
         featured: (r.vote_average || 0) >= 7.5 && !!r.backdrop_path,
-        seasons_count: r.number_of_seasons || undefined,
+        seasons_count: r.number_of_seasons || (r.seasons?.length ? r.seasons.length : undefined),
+        seasons: r.seasons || undefined,
       };
     });
 }

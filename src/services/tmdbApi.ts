@@ -26,11 +26,18 @@ function saveStoredWatchlistItems(items: Record<number, MediaItem>): void {
 export async function fetchMediaDetail(
   id: number,
   type: "movie" | "tv" | "anime",
+  mediaType?: "movie" | "tv",
 ): Promise<MediaItem | null> {
   try {
     const base = API_BASE_URL;
-    const queryType = type === "anime" ? "tv" : type;
-    const res = await fetch(`${base}/api/details?type=${queryType}&id=${id}`, {
+    const qs = new URLSearchParams({
+      id: String(id),
+      type,
+    });
+    if (mediaType) {
+      qs.set("media_type", mediaType);
+    }
+    const res = await fetch(`${base}/api/details?${qs.toString()}`, {
       signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return null;
@@ -39,6 +46,7 @@ export async function fetchMediaDetail(
     return {
       ...data.result,
       type: type === "anime" ? "anime" : data.result.type,
+      media_type: data.result.media_type || mediaType || (data.result.type === "tv" ? "tv" : "movie"),
     };
   } catch {
     return null;

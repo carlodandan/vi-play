@@ -243,16 +243,22 @@ export function App() {
     if (watchMatch) {
       const type = watchMatch[1] as "movie" | "tv" | "anime";
       const id = Number(watchMatch[2]);
-      const s = watchMatch[3]
-        ? Number(watchMatch[3])
-        : type !== "movie"
-          ? 1
-          : undefined;
-      const e = watchMatch[4]
-        ? Number(watchMatch[4])
-        : type !== "movie"
-          ? 1
-          : undefined;
+      const rawS = watchMatch[3] ? Number(watchMatch[3]) : undefined;
+      const rawE = watchMatch[4] ? Number(watchMatch[4]) : undefined;
+
+      const known = findKnownItem(id);
+      const isSeries =
+        type === "tv" ||
+        Boolean(rawS && rawE) ||
+        (known
+          ? known.media_type === "tv" ||
+            known.type === "tv" ||
+            Boolean(known.seasons?.length) ||
+            Boolean(known.seasons_count)
+          : false);
+
+      const s = isSeries ? (rawS ?? 1) : undefined;
+      const e = isSeries ? (rawE ?? 1) : undefined;
 
       const current = activePlayerRef.current;
       if (
@@ -264,13 +270,21 @@ export function App() {
       }
 
       setDetailModalItem(null);
-      const known = findKnownItem(id);
       if (known) {
         setActivePlayer({ item: known, season: s, episode: e });
       } else {
-        fetchMediaDetail(id, type).then((fetched) => {
+        const queryMediaType = isSeries ? "tv" : type === "movie" ? "movie" : undefined;
+        fetchMediaDetail(id, type, queryMediaType).then((fetched) => {
           if (fetched) {
-            setActivePlayer({ item: fetched, season: s, episode: e });
+            const finalIsSeries =
+              fetched.media_type === "tv" ||
+              fetched.type === "tv" ||
+              Boolean(fetched.seasons?.length) ||
+              Boolean(fetched.seasons_count) ||
+              Boolean(rawS && rawE);
+            const finalS = finalIsSeries ? (rawS ?? 1) : undefined;
+            const finalE = finalIsSeries ? (rawE ?? 1) : undefined;
+            setActivePlayer({ item: fetched, season: finalS, episode: finalE });
           }
         });
       }
@@ -342,7 +356,11 @@ export function App() {
     season?: number,
     episode?: number,
   ) => {
-    const isSeries = item.type === "tv" || item.type === "anime";
+    const isSeries =
+      item.media_type === "tv" ||
+      item.type === "tv" ||
+      Boolean(item.seasons && item.seasons.length > 0) ||
+      Boolean(item.seasons_count && item.seasons_count > 0);
     const s = isSeries ? (season ?? 1) : undefined;
     const e = isSeries ? (episode ?? 1) : undefined;
     saveWatchHistory(item, s, e);
@@ -350,7 +368,7 @@ export function App() {
     if (isSeries) {
       navigate(`/watch/${item.type}/${item.id}/${s}/${e}`);
     } else {
-      navigate(`/watch/movie/${item.id}`);
+      navigate(`/watch/${item.type}/${item.id}`);
     }
   };
 

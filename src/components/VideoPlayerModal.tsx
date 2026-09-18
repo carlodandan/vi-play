@@ -49,7 +49,12 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const [selectedSubIndex, setSelectedSubIndex] = useState<number>(-1); // -1 = off
   const controlsTimeoutRef = useRef<number | null>(null);
 
-  const isSeries = item.type === "tv" || item.type === "anime";
+  const isSeries =
+    item.media_type === "tv" ||
+    item.type === "tv" ||
+    Boolean(item.seasons && item.seasons.length > 0) ||
+    Boolean(item.seasons_count && item.seasons_count > 0) ||
+    (season !== undefined && episode !== undefined);
   const currentSeason = isSeries ? (season ?? 1) : undefined;
   const currentEpisode = isSeries ? (episode ?? 1) : undefined;
 
@@ -69,7 +74,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     retry,
   } = useStreamPlayer({
     tmdbId: item.id,
-    mediaType: item.type,
+    mediaType: item.media_type || (isSeries ? "tv" : "movie"),
     season: currentSeason,
     episode: currentEpisode,
   });

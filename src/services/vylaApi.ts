@@ -96,7 +96,6 @@ export async function streamMediaSources({
   const base = API_BASE_URL;
   const isTv =
     mediaType === "tv" ||
-    mediaType === "anime" ||
     (season !== undefined && episode !== undefined);
 
   const s = season ?? 1;
@@ -239,7 +238,6 @@ export async function fetchExtraSubtitles(
 
   const isTv =
     type === "tv" ||
-    type === "anime" ||
     (season !== undefined && episode !== undefined);
   const s = season ?? 1;
   const e = episode ?? 1;
