@@ -1,6 +1,7 @@
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
+import Sitemap from 'vite-plugin-sitemap';
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
@@ -8,7 +9,34 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    babel({ presets: [reactCompilerPreset()] })
+    babel({ presets: [reactCompilerPreset()] }),
+    Sitemap({
+			hostname: 'https://vi-play.pages.dev',
+
+			dynamicRoutes: [
+				'/browse',
+				'/rankings',
+				'/search',
+				'/library',
+			],
+
+			priority: {
+				'/browse': 0.8,
+				'/rankings': 0.7,
+				'/search': 0.6,
+				'/library': 0.5,
+			},
+
+			readable: true,
+
+			robots: [
+				{
+					userAgent: '*',
+					allow: '/',
+					crawlDelay: 2,
+				},
+			],
+		})
   ],
   server: {
     port: 5173,

@@ -46,7 +46,10 @@ export async function fetchMediaDetail(
     return {
       ...data.result,
       type: type === "anime" ? "anime" : data.result.type,
-      media_type: data.result.media_type || mediaType || (data.result.type === "tv" ? "tv" : "movie"),
+      media_type:
+        data.result.media_type ||
+        mediaType ||
+        (data.result.type === "tv" ? "tv" : "movie"),
     };
   } catch {
     return null;

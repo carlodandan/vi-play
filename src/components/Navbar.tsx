@@ -83,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Play className="w-4 h-4 text-white fill-white ml-0.5" />
               </div>
               <span className="text-xl font-black tracking-tight text-white">
-                V-<span style={{ color: "var(--color-accent)" }}>Play</span>
+                Vi-<span style={{ color: "var(--color-accent)" }}>Play</span>
               </span>
             </button>
 

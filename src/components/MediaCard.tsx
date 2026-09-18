@@ -176,4 +176,3 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     </div>
   );
 };
-

@@ -1,6 +1,6 @@
-# VPlay Private Streaming Worker (`vplay-api`)
+# Vi-Play Private Streaming Worker (`vplay-api`)
 
-The private Cloudflare Worker backend for VPlay, powered by the self-contained `@vyla-entertainment/sdk` and TMDB discovery proxies.
+The private Cloudflare Worker backend for Vi-Play, powered by the self-contained `@vyla-entertainment/sdk` and TMDB discovery proxies.
 
 > **Notice**: For educational and entertainment purposes only. Does not store or host any media files.
 
@@ -59,7 +59,7 @@ cd worker
 pnpm dev
 ```
  
-The worker starts at `http://127.0.0.1:8787`. The VPlay Vite frontend automatically connects to this port in development mode.
+The worker starts at `http://127.0.0.1:8787`. The Vi-Play Vite frontend automatically connects to this port in development mode.
  
 ---
  

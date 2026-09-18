@@ -1,12 +1,12 @@
-# VPlay Architecture & System Design
+# Vi-Play Architecture & System Design
 
-This document details the architectural design, data pipelines, caching tiers, security models, and runtime flows of **VPlay**.
+This document details the architectural design, data pipelines, caching tiers, security models, and runtime flows of **Vi-Play**.
 
 ---
 
 ## 1. System Overview
 
-VPlay is a modern media streaming interface built on top of Cloudflare's serverless edge infrastructure. It splits responsibilities into two decoupled layers:
+Vi-Play is a modern media streaming interface built on top of Cloudflare's serverless edge infrastructure. It splits responsibilities into two decoupled layers:
 1. **Frontend**: A high-performance, single-page client built with React 19, Vite 8, and Tailwind CSS v4, deployed to **Cloudflare Pages**.
 2. **Backend**: A private, self-contained Cloudflare Worker (**`vplay-api`**) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers and proxy TMDB discovery metadata.
 
@@ -86,7 +86,7 @@ graph LR
 
 ### 3.1 Live Discovery & Catalog Browsing
 
-VPlay uses a tiered fallback mechanism to provide **instant first paint** with zero layout shift while fetching fresh metadata asynchronously.
+Vi-Play uses a tiered fallback mechanism to provide **instant first paint** with zero layout shift while fetching fresh metadata asynchronously.
 
 ```mermaid
 sequenceDiagram
@@ -97,7 +97,7 @@ sequenceDiagram
     participant Worker as Cloudflare Worker (/api/trending, /api/popular)
     participant TMDB as TMDB API (themoviedb.org)
 
-    User->>App: Opens VPlay Homepage
+    User->>App: Opens Vi-Play Homepage
     App->>App: Instant render with CURATED_MEDIA skeleton
     App->>ClientCache: browseTmdb('trending') & browseTmdb('popular')
     
@@ -124,7 +124,7 @@ sequenceDiagram
 
 ### 3.2 Real-Time SSE Video Streaming
 
-When a user clicks "Play", VPlay initiates a Server-Sent Events (SSE) connection. Sources are scraped concurrently across 48+ providers and streamed down progressively so playback can begin on the first healthy stream.
+When a user clicks "Play", Vi-Play initiates a Server-Sent Events (SSE) connection. Sources are scraped concurrently across 48+ providers and streamed down progressively so playback can begin on the first healthy stream.
 
 ```mermaid
 sequenceDiagram

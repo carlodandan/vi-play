@@ -29,14 +29,14 @@ export const Footer: React.FC = () => {
             <span>Disclaimer & Entertainment Use Only</span>
           </div>
           <p className="text-zinc-400 leading-relaxed text-xs">
-            <strong className="text-zinc-200">V-Play</strong> is an open-source
+            <strong className="text-zinc-200">Vi-Play</strong> is an open-source
             demonstration application built exclusively for{" "}
             <strong className="text-white">
               entertainment and educational purposes
             </strong>
-            . V-Play does not host, stream, scrape, upload, or store media files
-            on its servers. All metadata and stream indices are provided by
-            third-party external providers via your self-hosted Vyla API
+            . Vi-Play does not host, stream, scrape, upload, or store media
+            files on its servers. All metadata and stream indices are provided
+            by third-party external providers via your self-hosted Vyla API
             gateway. Users are responsible for ensuring compliance with all
             applicable local copyright and licensing regulations in their
             jurisdiction.
@@ -59,7 +59,7 @@ export const Footer: React.FC = () => {
               />
             </div>
             <span className="font-bold text-white text-base">
-              V-<span style={{ color: "var(--color-accent)" }}>Play</span>
+              Vi-<span style={{ color: "var(--color-accent)" }}>Play</span>
             </span>
             <span className="text-zinc-700">|</span>
             <span className="text-zinc-500">Movies · TV Shows · Anime</span>
@@ -107,7 +107,7 @@ export const Footer: React.FC = () => {
         {/* Copyright */}
         <div className="text-center text-zinc-700 text-[11px] pt-2">
           <p>
-            © {new Date().getFullYear()} V-Play · For Entertainment Purposes
+            © {new Date().getFullYear()} Vi-Play · For Entertainment Purposes
             Only · All Rights Reserved
           </p>
         </div>
