@@ -1,5 +1,5 @@
 {
-  "name": "vplay-vyla-proxy",
+  "name": "vplay-api",
   "version": "1.0.0",
   "description": "Cloudflare Worker proxy for self-hosted Vyla Streaming API",
   "main": "src/index.ts",

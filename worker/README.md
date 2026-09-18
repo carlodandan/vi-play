@@ -1,4 +1,4 @@
-# VPlay Private Streaming Worker (`vplay-vyla-proxy`)
+# VPlay Private Streaming Worker (`vplay-api`)
 
 The private Cloudflare Worker backend for VPlay, powered by the self-contained `@vyla-entertainment/sdk` and TMDB discovery proxies.
 
@@ -77,5 +77,5 @@ The worker deploys with `workers_dev = false`. Cloudflare Pages connects to it t
 ```toml
 [[services]]
 binding = "VYLA_WORKER"
-service = "vplay-vyla-proxy"
+service = "vplay-api"
 ```

@@ -41,7 +41,7 @@
 
 VPlay is engineered as a modern decoupled web application designed for global deployment on Cloudflare's edge network:
 1. **Frontend**: A sleek, responsive Single Page Application (SPA) hosted on **Cloudflare Pages**, styled in a modern **Cinema Dark / OLED** visual system.
-2. **Private Streaming Worker**: A standalone, self-contained Cloudflare Worker (`vplay-vyla-proxy`) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers without requiring an external VPS or Node.js server.
+2. **Private Streaming Worker**: A standalone, self-contained Cloudflare Worker (`vplay-api`) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers without requiring an external VPS or Node.js server.
 3. **Private Service Binding**: The worker is private (`workers_dev = false`) and communicates with Cloudflare Pages via zero-latency, same-origin internal Service Bindings (`VYLA_WORKER`).
 
 ---
@@ -84,7 +84,7 @@ graph TD
     subgraph CF ["Cloudflare Global Network"]
         Pages["Cloudflare Pages (Static Frontend)"]
         Functions["Pages Functions Router (functions/router)"]
-        Worker["Private Cloudflare Worker (vplay-vyla-proxy)"]
+        Worker["Private Cloudflare Worker (vplay-api)"]
     end
     
     TMDB["TMDB API (themoviedb.org)"]
@@ -209,7 +209,7 @@ pnpm run deploy
 ```
 
 ### 2. Deploy Cloudflare Pages
-The root `wrangler.toml` binds directly to `vplay-vyla-proxy`:
+The root `wrangler.toml` binds directly to `vplay-api`:
 ```toml
 name = "vplay"
 pages_build_output_dir = "dist"
@@ -218,7 +218,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [[services]]
 binding = "VYLA_WORKER"
-service = "vplay-vyla-proxy"
+service = "vplay-api"
 ```
 
 Build the production bundle and deploy:
@@ -236,7 +236,7 @@ Alternatively, link your GitHub repository to Cloudflare Pages with:
 - **Root directory**: `/`
 - Under **Settings** → **Functions** → **Service Bindings**, add:
   - **Variable name**: `VYLA_WORKER`
-  - **Service**: `vplay-vyla-proxy`
+  - **Service**: `vplay-api`
 
 ---
 

@@ -8,7 +8,7 @@ This document details the architectural design, data pipelines, caching tiers, s
 
 VPlay is a modern media streaming interface built on top of Cloudflare's serverless edge infrastructure. It splits responsibilities into two decoupled layers:
 1. **Frontend**: A high-performance, single-page client built with React 19, Vite 8, and Tailwind CSS v4, deployed to **Cloudflare Pages**.
-2. **Backend**: A private, self-contained Cloudflare Worker (**`vplay-vyla-proxy`**) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers and proxy TMDB discovery metadata.
+2. **Backend**: A private, self-contained Cloudflare Worker (**`vplay-api`**) executing the `@vyla-entertainment/sdk` to aggregate streams from 48+ external video scrapers and proxy TMDB discovery metadata.
 
 The two layers communicate seamlessly in production via **Cloudflare Service Bindings**, eliminating public origin exposure, CORS preflight bottlenecks, and the need for external virtual private servers (VPS).
 
@@ -25,7 +25,7 @@ graph TD
     subgraph CF ["Cloudflare Global Network"]
         Pages["Cloudflare Pages (Frontend SPA)"]
         Functions["Pages Functions Router (functions/router)"]
-        Worker["Cloudflare Worker (vplay-vyla-proxy)"]
+        Worker["Cloudflare Worker (vplay-api)"]
     end
     
     TMDB["TMDB API (themoviedb.org)"]

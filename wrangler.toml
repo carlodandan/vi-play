@@ -8,4 +8,4 @@ compatibility_flags = ["nodejs_compat"]
 # The worker is NOT public (workers_dev = false) and only reachable through this internal binding.
 [[services]]
 binding = "VYLA_WORKER"
-service = "vplay-vyla-proxy"
+service = "vplay-api"
