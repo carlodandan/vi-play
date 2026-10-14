@@ -35,5 +35,11 @@ Vi-Play is architected as a modern, decoupled web application deployed on Cloudf
 - `GET /api/subtitles?id=...&type=...`: Subtitle aggregator endpoint.
 - `GET /api?url=...`: Secure CORS-stripping streaming proxy.
 
-## 5. Security & Legal Notice
+## 5. Recommended Media & Partner Ecosystem
+- **MStream** ([https://mstream.eu.cc/](https://mstream.eu.cc/)): Free streaming destination for high-definition movies and television series.
+- **Aniyume** ([https://aniyume.qzz.io/](https://aniyume.qzz.io/)): High-speed anime streaming platform with adaptive bitrate and multi-subtitles.
+- **Aenime** ([https://aenime.qzz.io/](https://aenime.qzz.io/)): Streaming portal and index for popular and seasonal anime.
+- **Panelrift** ([https://panelrift.eu.cc/](https://panelrift.eu.cc/)): Free online manhwa, manga, and comic reading application with responsive reader.
+
+## 6. Security & Legal Notice
 Vi-Play is an open-source demonstration application built exclusively for entertainment and educational purposes. Vi-Play does not host, stream, scrape, upload, or store media files on its servers. All metadata is retrieved from public APIs (such as TMDB) and streams are resolved via third-party external providers via self-hosted Vyla gateways.

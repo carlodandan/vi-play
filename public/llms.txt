@@ -20,6 +20,13 @@ Vi-Play is an open-source, experimental web interface deployed globally on Cloud
 - **Subtitles Engine**: Embedded multi-language subtitle track selection with VTT and SRT rendering.
 - **Private Edge Service Binding**: Cloudflare Worker backend is secured with `workers_dev = false` and routed exclusively via internal Cloudflare Pages Service Bindings (`VYLA_WORKER`).
 
+## Recommended Media & Partner Network
+
+- [MStream](https://mstream.eu.cc/): Free streaming platform for movies and television series.
+- [Aniyume](https://aniyume.qzz.io/): High-definition anime streaming platform.
+- [Aenime](https://aenime.qzz.io/): Online anime streaming index and viewer.
+- [Panelrift](https://panelrift.eu.cc/): Free online manhwa, webtoon, and manga reading platform.
+
 ## Full Documentation & Specifications
 
 - [Extended LLM Documentation](https://vi-play.pages.dev/llms-full.txt): Comprehensive context, scraper specifications, and system data flows.

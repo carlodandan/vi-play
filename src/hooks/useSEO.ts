@@ -83,15 +83,19 @@ export function useSEO({
     if (twitterImageEl) twitterImageEl.content = img;
 
     // 5. Dynamic JSON-LD Schema
-    const dynamicSchemaEl = document.getElementById(
+    let dynamicSchemaEl = document.getElementById(
       "dynamic-seo-schema",
     ) as HTMLScriptElement | null;
-    if (dynamicSchemaEl) {
-      if (schema) {
-        dynamicSchemaEl.textContent = JSON.stringify(schema);
-      } else {
-        dynamicSchemaEl.textContent = "";
+    if (schema) {
+      if (!dynamicSchemaEl) {
+        dynamicSchemaEl = document.createElement("script");
+        dynamicSchemaEl.type = "application/ld+json";
+        dynamicSchemaEl.id = "dynamic-seo-schema";
+        document.head.appendChild(dynamicSchemaEl);
       }
+      dynamicSchemaEl.textContent = JSON.stringify(schema);
+    } else if (dynamicSchemaEl) {
+      dynamicSchemaEl.remove();
     }
   }, [title, description, canonicalPath, ogImage, ogType, schema]);
 }

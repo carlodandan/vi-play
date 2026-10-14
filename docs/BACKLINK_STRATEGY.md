@@ -102,7 +102,25 @@ Use Ahrefs, Moz, or Semrush (or free backlink checkers):
 
 ---
 
-## 7. 30-Day Execution Roadmap
+## 7. Active Reciprocal & Partner Backlink Network
+
+To establish mutual domain authority (DA) and build crawlable context across related entertainment niches, Vi-Play maintains reciprocal backlinks with trusted community platforms:
+
+| Partner Platform | Primary URL | Niche & Authority Relevance | Integration Placement | Link Attributes |
+|---|---|---|---|---|
+| **MStream** | `https://mstream.eu.cc/` | Movies & TV Series Streaming | Footer Directory, `llms.txt`, `llms-full.txt` | Dofollow, contextual anchor |
+| **Aniyume** | `https://aniyume.qzz.io/` | High-Definition Anime Streaming | Footer Directory, `llms.txt`, `llms-full.txt` | Dofollow, contextual anchor |
+| **Aenime** | `https://aenime.qzz.io/` | Online Anime Streaming & Index | Footer Directory, `llms.txt`, `llms-full.txt` | Dofollow, contextual anchor |
+| **Panelrift** | `https://panelrift.eu.cc/` | Manhwa, Manga & Webtoon Reader | Footer Directory, `llms.txt`, `llms-full.txt` | Dofollow, contextual anchor |
+
+### Reciprocal Exchange Best Practices:
+1. **Contextual Anchors**: Use descriptive anchor text (`MStream (Movies & TV)`, `Aniyume (Anime)`, `Panelrift (Manhwa Reader)`) rather than generic "click here".
+2. **Page Location**: Placed in the crawlable site-wide footer directory and AI discovery manifests (`/llms.txt`), ensuring indexation by all major search engine bots (Googlebot, Bingbot, Applebot, GPTBot, ClaudeBot).
+3. **Link Integrity**: Avoid `nofollow` or `sponsored` tags for legitimate non-paid community partners to ensure link equity flows bidirectionally.
+
+---
+
+## 8. 30-Day Execution Roadmap
 
 ```mermaid
 flowchart LR
