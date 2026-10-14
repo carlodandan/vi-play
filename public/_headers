@@ -4,6 +4,7 @@
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self' 'unsafe-inline' https: http: data: blob:; img-src 'self' data: blob: https: http:; media-src 'self' blob: https: http:; connect-src 'self' https: http: wss: ws: blob:; frame-ancestors 'self'; upgrade-insecure-requests;
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

@@ -8,6 +8,7 @@
       http-equiv="Content-Security-Policy"
       content="upgrade-insecure-requests"
     />
+    <meta name="google-site-verification" content="_9j-eR3SH3kVTT5LQ-OSIVwr5OanpybXUx76DNlshHg" />
 
     <!-- Standard Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -117,9 +118,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+    <meta name="author" content="Vi-Play Team" />
+
     <!-- OpenGraph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Vi-Play" />
+    <meta property="og:locale" content="en_US" />
     <meta
       property="og:title"
       id="og-title"
@@ -136,6 +140,10 @@
       id="og-image"
       content="https://vi-play.pages.dev/icons/android-icon-192x192.png"
     />
+    <meta property="og:image:width" content="192" />
+    <meta property="og:image:height" content="192" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Vi-Play Cinema Streaming Platform" />
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -154,44 +162,51 @@
       id="twitter-image"
       content="https://vi-play.pages.dev/icons/android-icon-192x192.png"
     />
+    <meta
+      name="twitter:image:alt"
+      content="Vi-Play Cinema Streaming Platform"
+    />
 
     <!-- Structured Data (JSON-LD) Site-wide Schema -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "WebSite",
-            "@id": "https://vi-play.pages.dev/#website",
-            "url": "https://vi-play.pages.dev/",
-            "name": "Vi-Play",
-            "description": "Stream Movies, TV Shows, and Anime in high definition.",
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": {
-                "@type": "EntryPoint",
-                "urlTemplate": "https://vi-play.pages.dev/?search={search_term_string}"
-              },
-              "query-input": "required name=search_term_string"
-            }
+        "@type": "WebSite",
+        "@id": "https://vi-play.pages.dev/#website",
+        "url": "https://vi-play.pages.dev/",
+        "name": "Vi-Play",
+        "description": "Stream Movies, TV Shows, and Anime in high definition.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Vi-Play",
+          "url": "https://vi-play.pages.dev/"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://vi-play.pages.dev/?search={search_term_string}"
           },
-          {
-            "@type": "WebApplication",
-            "@id": "https://vi-play.pages.dev/#webapp",
-            "name": "Vi-Play",
-            "url": "https://vi-play.pages.dev/",
-            "applicationCategory": "EntertainmentApplication",
-            "operatingSystem": "All",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            }
-          }
-        ]
+          "query-input": "required name=search_term_string"
+        }
       }
     </script>
-    <script type="application/ld+json" id="dynamic-seo-schema"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "@id": "https://vi-play.pages.dev/#webapp",
+        "name": "Vi-Play",
+        "url": "https://vi-play.pages.dev/",
+        "applicationCategory": "EntertainmentApplication",
+        "operatingSystem": "All",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
   </head>
   <body class="bg-[#090a0f] text-zinc-100 overflow-x-hidden">
     <div id="root"></div>

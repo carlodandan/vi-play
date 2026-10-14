@@ -45,7 +45,7 @@ export const Footer: React.FC = () => {
 
         {/* Internal Link Columns for Crawlers & Navigation */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-6 py-6 text-xs"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 py-6 text-xs"
           style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
         >
           <div>
@@ -116,6 +116,58 @@ export const Footer: React.FC = () => {
               <li>
                 <a href="/anime" className="hover:text-white transition-colors">
                   Shonen & Japanese Animation
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px] mb-3">
+              Partner Network
+            </h3>
+            <ul className="space-y-2 text-zinc-400">
+              <li>
+                <a
+                  href="https://mstream.eu.cc/"
+                  target="_blank"
+                  rel="noopener"
+                  className="hover:text-white transition-colors"
+                  title="MStream — Free Movies and TV Shows"
+                >
+                  MStream (Movies & TV)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://aniyume.qzz.io/"
+                  target="_blank"
+                  rel="noopener"
+                  className="hover:text-white transition-colors"
+                  title="Aniyume — HD Anime Streaming"
+                >
+                  Aniyume (Anime)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://aenime.qzz.io/"
+                  target="_blank"
+                  rel="noopener"
+                  className="hover:text-white transition-colors"
+                  title="Aenime — Online Anime Streaming"
+                >
+                  Aenime (Anime Streams)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://panelrift.eu.cc/"
+                  target="_blank"
+                  rel="noopener"
+                  className="hover:text-white transition-colors"
+                  title="Panelrift — Free Online Manhwa Reading Platform"
+                >
+                  Panelrift (Manhwa Reader)
                 </a>
               </li>
             </ul>

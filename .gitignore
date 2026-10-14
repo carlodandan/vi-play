@@ -34,3 +34,9 @@ dist-ssr
 
 # Cloudflare Wrangler
 .wrangler
+
+# Agentic Skills
+.agents/
+.claude/
+.github/prompt/
+.gemini/
